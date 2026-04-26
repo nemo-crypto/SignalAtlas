@@ -52,6 +52,52 @@ export type OrderBookDepth = {
   imbalance: number;
 };
 
+export type RealtimeCanvasInterval = "5m" | "10m" | "15m";
+
+export type RealtimeCanvasCandle = {
+  openTime: number;
+  closeTime: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  bollingerUpper: number | null;
+  bollingerMiddle: number | null;
+  bollingerLower: number | null;
+};
+
+export type RealtimeCanvasMacdPoint = {
+  openTime: number;
+  macd: number;
+  signal: number;
+  histogram: number;
+};
+
+export type RealtimeCanvasTrend = {
+  tone: Sentiment;
+  label: string;
+  detail: string;
+};
+
+export type RealtimeCanvasSnapshot = {
+  interval: RealtimeCanvasInterval;
+  candles: RealtimeCanvasCandle[];
+  macd: RealtimeCanvasMacdPoint[];
+  low: number;
+  high: number;
+  changePercent: number;
+  volatilityPercent: number;
+  supportPrice: number | null;
+  resistancePrice: number | null;
+  trend: RealtimeCanvasTrend;
+};
+
+export type RealtimeCanvasData = {
+  defaultInterval: RealtimeCanvasInterval;
+  intervals: Record<RealtimeCanvasInterval, RealtimeCanvasSnapshot>;
+};
+
 export type MarketOverview = {
   symbol: string;
   displayName: string;
@@ -66,6 +112,7 @@ export type MarketOverview = {
   resistance: string;
   defaultAlertPrice: number;
   sparkline: number[];
+  realtimeCanvas?: RealtimeCanvasData | null;
   orderBookDepth?: OrderBookDepth | null;
   reportHighlights: string[];
   dimensions: MarketDimension[];

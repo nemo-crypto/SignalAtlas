@@ -59,6 +59,7 @@ function fetchJson<T>(url: string, signal: AbortSignal): Promise<T> {
 function buildRawSnapshot(args: {
   symbol: string;
   ticker: SpotTicker24h;
+  klines5m: BinanceKline[];
   klines15m: BinanceKline[];
   klines1h: BinanceKline[];
   klines4h: BinanceKline[];
@@ -80,6 +81,7 @@ function buildRawSnapshot(args: {
   return {
     symbol: args.symbol,
     ticker: args.ticker,
+    klines5m: args.klines5m,
     klines15m: args.klines15m,
     klines1h: args.klines1h,
     klines4h: args.klines4h,
@@ -114,6 +116,7 @@ export async function fetchLiveMarketOverview(
 ): Promise<LiveOverviewResponse> {
   const requests = await Promise.allSettled([
     fetchJson<SpotTicker24h>(`${SPOT_BASE}/api/v3/ticker/24hr?symbol=${symbol}`, signal),
+    fetchJson<BinanceKline[]>(`${SPOT_BASE}/api/v3/klines?symbol=${symbol}&interval=5m&limit=120`, signal),
     fetchJson<BinanceKline[]>(`${SPOT_BASE}/api/v3/klines?symbol=${symbol}&interval=15m&limit=80`, signal),
     fetchJson<BinanceKline[]>(`${SPOT_BASE}/api/v3/klines?symbol=${symbol}&interval=1h&limit=80`, signal),
     fetchJson<BinanceKline[]>(`${SPOT_BASE}/api/v3/klines?symbol=${symbol}&interval=4h&limit=80`, signal),
@@ -126,17 +129,18 @@ export async function fetchLiveMarketOverview(
   ]);
 
   const ticker = requests[0].status === "fulfilled" ? requests[0].value : null;
-  const klines15m = requests[1].status === "fulfilled" ? requests[1].value : null;
-  const klines1h = requests[2].status === "fulfilled" ? requests[2].value : null;
-  const klines4h = requests[3].status === "fulfilled" ? requests[3].value : null;
-  const aggTrades = requests[4].status === "fulfilled" ? requests[4].value : [];
-  const depth = requests[5].status === "fulfilled" ? requests[5].value : null;
-  const premiumIndex = requests[6].status === "fulfilled" ? requests[6].value : null;
-  const openInterest = requests[7].status === "fulfilled" ? requests[7].value : null;
-  const openInterestHist = requests[8].status === "fulfilled" ? requests[8].value : null;
-  const longShortRatio = requests[9].status === "fulfilled" ? requests[9].value : null;
+  const klines5m = requests[1].status === "fulfilled" ? requests[1].value : null;
+  const klines15m = requests[2].status === "fulfilled" ? requests[2].value : null;
+  const klines1h = requests[3].status === "fulfilled" ? requests[3].value : null;
+  const klines4h = requests[4].status === "fulfilled" ? requests[4].value : null;
+  const aggTrades = requests[5].status === "fulfilled" ? requests[5].value : [];
+  const depth = requests[6].status === "fulfilled" ? requests[6].value : null;
+  const premiumIndex = requests[7].status === "fulfilled" ? requests[7].value : null;
+  const openInterest = requests[8].status === "fulfilled" ? requests[8].value : null;
+  const openInterestHist = requests[9].status === "fulfilled" ? requests[9].value : null;
+  const longShortRatio = requests[10].status === "fulfilled" ? requests[10].value : null;
 
-  if (!ticker || !klines15m || !klines1h || !klines4h) {
+  if (!ticker || !klines5m || !klines15m || !klines1h || !klines4h) {
     return {
       overview: null,
       status: "fallback",
@@ -149,6 +153,7 @@ export async function fetchLiveMarketOverview(
   const snapshot = buildRawSnapshot({
     symbol,
     ticker,
+    klines5m,
     klines15m,
     klines1h,
     klines4h,

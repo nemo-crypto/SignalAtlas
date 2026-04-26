@@ -2,6 +2,9 @@ import {
   type MarketDimension,
   type MarketOverview,
   type OrderBookDepth,
+  type RealtimeCanvasData,
+  type RealtimeCanvasInterval,
+  type RealtimeCanvasSnapshot,
   signalUniverse
 } from "../data/mockData";
 
@@ -86,6 +89,7 @@ export type CombinedStreamMessage = {
 export type RawMarketSnapshot = {
   symbol: string;
   ticker: SpotTicker24h;
+  klines5m: BinanceKline[];
   klines15m: BinanceKline[];
   klines1h: BinanceKline[];
   klines4h: BinanceKline[];
@@ -163,6 +167,7 @@ export function createBaselineOverview(symbol: string): MarketOverview {
     resistance: "等待卖方深度恢复",
     defaultAlertPrice: 0,
     sparkline: Array.from({ length: 12 }, () => 0),
+    realtimeCanvas: null,
     orderBookDepth: null,
     reportHighlights: [
       "当前尚未拿到 Binance 公共行情，因此不再回退到本地 mock 价格。",
@@ -543,6 +548,278 @@ function calculateMacd(values: number[]) {
   };
 }
 
+type NormalizedRealtimeCandle = {
+  openTime: number;
+  closeTime: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+type BandPoint = {
+  upper: number | null;
+  middle: number | null;
+  lower: number | null;
+};
+
+type MacdPoint = {
+  macd: number;
+  signal: number;
+  histogram: number;
+};
+
+const REALTIME_CANVAS_VISIBLE_CANDLES = 30;
+
+function calculateMacdSeries(values: number[]): MacdPoint[] {
+  const ema12 = emaSeries(values, 12);
+  const ema26 = emaSeries(values, 26);
+  const macdLine = values.map((_, index) => (ema12[index] ?? 0) - (ema26[index] ?? 0));
+  const signalLine = emaSeries(macdLine, 9);
+
+  return values.map((_, index) => ({
+    macd: macdLine[index] ?? 0,
+    signal: signalLine[index] ?? 0,
+    histogram: (macdLine[index] ?? 0) - (signalLine[index] ?? 0)
+  }));
+}
+
+function calculateBollingerBands(values: number[], period = 20, deviationMultiplier = 2): BandPoint[] {
+  return values.map((_, index) => {
+    if (index < period - 1) {
+      return {
+        upper: null,
+        middle: null,
+        lower: null
+      };
+    }
+
+    const window = values.slice(index - period + 1, index + 1);
+    const middle = window.reduce((sum, value) => sum + value, 0) / period;
+    const variance =
+      window.reduce((sum, value) => sum + (value - middle) ** 2, 0) / period;
+    const deviation = Math.sqrt(variance);
+
+    return {
+      upper: middle + deviation * deviationMultiplier,
+      middle,
+      lower: middle - deviation * deviationMultiplier
+    };
+  });
+}
+
+function normalizeRealtimeCandles(klines: BinanceKline[]): NormalizedRealtimeCandle[] {
+  return klines
+    .map((item) => ({
+      openTime: item[0],
+      closeTime: item[6],
+      open: toNumber(item[1]),
+      high: toNumber(item[2]),
+      low: toNumber(item[3]),
+      close: toNumber(item[4]),
+      volume: toNumber(item[5])
+    }))
+    .filter(
+      (item) =>
+        item.openTime > 0 &&
+        item.closeTime > 0 &&
+        item.high > 0 &&
+        item.low > 0 &&
+        item.open > 0 &&
+        item.close > 0
+    )
+    .sort((left, right) => left.openTime - right.openTime);
+}
+
+function aggregateRealtimeCandles(
+  candles: NormalizedRealtimeCandle[],
+  intervalMinutes: number
+): NormalizedRealtimeCandle[] {
+  if (candles.length === 0) {
+    return [];
+  }
+
+  const intervalMs = intervalMinutes * 60_000;
+  const aggregated = new Map<number, NormalizedRealtimeCandle>();
+
+  candles.forEach((candle) => {
+    const bucket = Math.floor(candle.openTime / intervalMs) * intervalMs;
+    const existing = aggregated.get(bucket);
+
+    if (!existing) {
+      aggregated.set(bucket, {
+        ...candle
+      });
+      return;
+    }
+
+    aggregated.set(bucket, {
+      openTime: existing.openTime,
+      closeTime: candle.closeTime,
+      open: existing.open,
+      high: Math.max(existing.high, candle.high),
+      low: Math.min(existing.low, candle.low),
+      close: candle.close,
+      volume: existing.volume + candle.volume
+    });
+  });
+
+  return Array.from(aggregated.values()).sort((left, right) => left.openTime - right.openTime);
+}
+
+function deriveRealtimeTrend(args: {
+  candles: NormalizedRealtimeCandle[];
+  macdSeries: MacdPoint[];
+  bands: BandPoint[];
+}): RealtimeCanvasSnapshot["trend"] {
+  const lastCandle = args.candles[args.candles.length - 1];
+  const previousCandle = args.candles[args.candles.length - 2] ?? lastCandle;
+  const lastMacd = args.macdSeries[args.macdSeries.length - 1] ?? {
+    macd: 0,
+    signal: 0,
+    histogram: 0
+  };
+  const lastBand = args.bands[args.bands.length - 1] ?? {
+    upper: null,
+    middle: null,
+    lower: null
+  };
+  const priceDelta = lastCandle.close - previousCandle.close;
+  const aboveMiddle = lastBand.middle != null && lastCandle.close >= lastBand.middle;
+  const belowMiddle = lastBand.middle != null && lastCandle.close <= lastBand.middle;
+  const isUpperBreakout = lastBand.upper != null && lastCandle.close >= lastBand.upper;
+  const isLowerBreakdown = lastBand.lower != null && lastCandle.close <= lastBand.lower;
+
+  if ((isUpperBreakout || aboveMiddle) && lastMacd.histogram >= 0 && priceDelta >= 0) {
+    return {
+      tone: "bullish",
+      label: isUpperBreakout ? "上轨突破" : "多头延续",
+      detail:
+        lastMacd.macd >= lastMacd.signal
+          ? "布林中上轨运行，MACD 快线保持在慢线上方。"
+          : "价格仍守在布林中轨上方，短线偏强。"
+    };
+  }
+
+  if ((isLowerBreakdown || belowMiddle) && lastMacd.histogram <= 0 && priceDelta <= 0) {
+    return {
+      tone: "bearish",
+      label: isLowerBreakdown ? "下轨失守" : "空头压制",
+      detail:
+        lastMacd.macd <= lastMacd.signal
+          ? "布林中下轨偏弱，MACD 柱体继续位于零轴下方。"
+          : "价格贴近布林下轨，反弹力度仍不足。"
+    };
+  }
+
+  return {
+    tone: "neutral",
+    label: "区间整理",
+    detail:
+      lastBand.upper != null && lastBand.lower != null
+        ? "价格围绕布林中轨反复，MACD 等待下一次放量选择方向。"
+        : "当前仍处于初始观察阶段，等待更多 K 线确认方向。"
+  };
+}
+
+function buildRealtimeCanvasSnapshot(args: {
+  interval: RealtimeCanvasInterval;
+  candles: NormalizedRealtimeCandle[];
+  supportPrice: number | null;
+  resistancePrice: number | null;
+}): RealtimeCanvasSnapshot {
+  const closes = args.candles.map((item) => item.close);
+  const bands = calculateBollingerBands(closes);
+  const macdSeries = calculateMacdSeries(closes);
+  const visibleStartIndex = Math.max(args.candles.length - REALTIME_CANVAS_VISIBLE_CANDLES, 0);
+  const visibleCandles = args.candles.slice(visibleStartIndex).map((candle, index) => {
+    const band = bands[visibleStartIndex + index] ?? {
+      upper: null,
+      middle: null,
+      lower: null
+    };
+
+    return {
+      ...candle,
+      bollingerUpper: band.upper,
+      bollingerMiddle: band.middle,
+      bollingerLower: band.lower
+    };
+  });
+  const visibleMacd = macdSeries.slice(visibleStartIndex).map((point, index) => ({
+    openTime: visibleCandles[index]?.openTime ?? args.candles[visibleStartIndex + index]?.openTime ?? 0,
+    macd: point.macd,
+    signal: point.signal,
+    histogram: point.histogram
+  }));
+  const visibleLow = Math.min(...visibleCandles.map((item) => item.low));
+  const visibleHigh = Math.max(...visibleCandles.map((item) => item.high));
+  const firstClose = visibleCandles[0]?.close ?? 0;
+  const lastClose = visibleCandles[visibleCandles.length - 1]?.close ?? firstClose;
+  const trend = deriveRealtimeTrend({
+    candles: visibleCandles,
+    macdSeries: visibleMacd,
+    bands: visibleCandles.map((item) => ({
+      upper: item.bollingerUpper,
+      middle: item.bollingerMiddle,
+      lower: item.bollingerLower
+    }))
+  });
+
+  return {
+    interval: args.interval,
+    candles: visibleCandles,
+    macd: visibleMacd,
+    low: visibleLow,
+    high: visibleHigh,
+    changePercent: firstClose > 0 ? ((lastClose - firstClose) / firstClose) * 100 : 0,
+    volatilityPercent: lastClose > 0 ? ((visibleHigh - visibleLow) / lastClose) * 100 : 0,
+    supportPrice: args.supportPrice,
+    resistancePrice: args.resistancePrice,
+    trend
+  };
+}
+
+function buildRealtimeCanvasData(args: {
+  klines5m: BinanceKline[];
+  klines15m: BinanceKline[];
+  supportPrice: number | null;
+  resistancePrice: number | null;
+}): RealtimeCanvasData | null {
+  const candles5m = normalizeRealtimeCandles(args.klines5m);
+  const candles15m = normalizeRealtimeCandles(args.klines15m);
+  const candles10m = aggregateRealtimeCandles(candles5m, 10);
+
+  if (candles5m.length < 12 || candles10m.length < 12 || candles15m.length < 12) {
+    return null;
+  }
+
+  return {
+    defaultInterval: "5m",
+    intervals: {
+      "5m": buildRealtimeCanvasSnapshot({
+        interval: "5m",
+        candles: candles5m,
+        supportPrice: args.supportPrice,
+        resistancePrice: args.resistancePrice
+      }),
+      "10m": buildRealtimeCanvasSnapshot({
+        interval: "10m",
+        candles: candles10m,
+        supportPrice: args.supportPrice,
+        resistancePrice: args.resistancePrice
+      }),
+      "15m": buildRealtimeCanvasSnapshot({
+        interval: "15m",
+        candles: candles15m,
+        supportPrice: args.supportPrice,
+        resistancePrice: args.resistancePrice
+      })
+    }
+  };
+}
+
 function calculateVolumeRatio(klines: BinanceKline[]): number {
   if (klines.length < 6) {
     return 1;
@@ -636,8 +913,17 @@ export function buildOrderBookDepth(depth: DepthSnapshot | null): OrderBookDepth
 }
 
 export function selectWall(levels: Array<[string, string]>, label: string): string {
-  if (levels.length === 0) {
+  const wallPrice = selectWallPrice(levels);
+  if (wallPrice === null) {
     return label;
+  }
+
+  return `${formatCurrency(wallPrice)} ${label}`;
+}
+
+function selectWallPrice(levels: Array<[string, string]>): number | null {
+  if (levels.length === 0) {
+    return null;
   }
 
   const wall = levels
@@ -648,10 +934,10 @@ export function selectWall(levels: Array<[string, string]>, label: string): stri
     .sort((left, right) => right.quantity - left.quantity)[0];
 
   if (!wall) {
-    return label;
+    return null;
   }
 
-  return `${formatCurrency(wall.price)} ${label}`;
+  return wall.price;
 }
 
 export function getLargeTradeThreshold(symbol: string): number {
@@ -996,6 +1282,7 @@ export function applyOrderBookDimension(
 
 export function buildLiveOverview(args: RawMarketSnapshot): MarketOverview {
   const overview = createBaselineOverview(args.symbol);
+  const candles5m = normalizeRealtimeCandles(args.klines5m);
   const closes15m = args.klines15m.map((item) => toNumber(item[4]));
   const closes1h = args.klines1h.map((item) => toNumber(item[4]));
   const closes4h = args.klines4h.map((item) => toNumber(item[4]));
@@ -1016,9 +1303,19 @@ export function buildLiveOverview(args: RawMarketSnapshot): MarketOverview {
   const midTrend = getLast(emaSeries(closes1h, 12)) > getLast(emaSeries(closes1h, 26)) ? 2 : -2;
   const longTrend = closePrice > getLast(emaSeries(closes4h, 21)) ? 3 : -3;
   const multiTimeframeScore = shortTrend + midTrend + longTrend;
+  const supportPrice = args.depth ? selectWallPrice(args.depth.bids) : candles5m[candles5m.length - 1]?.low ?? lowPrice;
+  const resistancePrice = args.depth
+    ? selectWallPrice(args.depth.asks)
+    : candles5m[candles5m.length - 1]?.high ?? highPrice;
   const support = args.depth ? selectWall(args.depth.bids, "买方墙") : `${formatCurrency(lowPrice)} 日内低点`;
   const resistance = args.depth ? selectWall(args.depth.asks, "卖方墙") : `${formatCurrency(highPrice)} 日内高点`;
   const rangePercent = calculateRangePercent(highPrice, lowPrice, closePrice);
+  const realtimeCanvas = buildRealtimeCanvasData({
+    klines5m: args.klines5m,
+    klines15m: args.klines15m,
+    supportPrice,
+    resistancePrice
+  });
   const openInterestText =
     args.openInterestChange === null
       ? overview.openInterest
@@ -1039,6 +1336,7 @@ export function buildLiveOverview(args: RawMarketSnapshot): MarketOverview {
     orderImbalance
   });
   overview.sparkline = closes15m.slice(-12);
+  overview.realtimeCanvas = realtimeCanvas;
   overview.orderBookDepth = orderBookDepth ?? overview.orderBookDepth ?? null;
   overview.defaultAlertPrice = Math.round(closePrice);
 

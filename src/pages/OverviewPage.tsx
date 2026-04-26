@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   OverviewOrderBookDepthChart,
-  OverviewPriceSparkline,
+  OverviewRealtimeCanvas,
   OverviewSignalRadar
 } from "../components/charts/OverviewCharts";
 import { SectionHeader } from "../components/SectionHeader";
@@ -11,6 +11,7 @@ import { useLiveMarketOverview } from "../hooks/useLiveMarketOverview";
 import { gridPresets, type GridSymbol } from "../data/gridStrategyData";
 import {
   type MarketDimension,
+  type RealtimeCanvasInterval,
   type SignalHistoryItem,
   type Sentiment,
   signalUniverse
@@ -409,6 +410,7 @@ export function OverviewPage() {
   const [shouldFocusStrategyRouter, setShouldFocusStrategyRouter] = useState(
     () => routeSeed?.focus === "strategy-router"
   );
+  const [realtimeCanvasInterval, setRealtimeCanvasInterval] = useState<RealtimeCanvasInterval>("5m");
   const [isStrategyRouterHighlighted, setIsStrategyRouterHighlighted] = useState(false);
   const {
     overview: market,
@@ -460,6 +462,7 @@ export function OverviewPage() {
     setActiveSymbol(routeSeed.symbol);
     setOverviewRouteNote(routeSeed.note);
     setShouldFocusStrategyRouter(routeSeed.focus === "strategy-router");
+    setRealtimeCanvasInterval("5m");
     navigate(
       {
         pathname: location.pathname,
@@ -515,6 +518,7 @@ export function OverviewPage() {
     setHistoryConfidenceFilter("all");
     setHistoryMarketPnlFilter("all");
     setHistoryPnlFilter("all");
+    setRealtimeCanvasInterval("5m");
     triggeredAlertIdsRef.current = new Set();
     setActionFeedback("已切换币种，综合信号已按默认权重重新计算。");
   }, [activeSymbol]);
@@ -854,16 +858,19 @@ export function OverviewPage() {
       incorrectCount
     };
   }, [filteredHistory]);
+  const activeRealtimeCanvas =
+    displayMarket.realtimeCanvas?.intervals[realtimeCanvasInterval] ??
+    displayMarket.realtimeCanvas?.intervals[displayMarket.realtimeCanvas?.defaultInterval ?? "5m"] ??
+    null;
   const volatilityRangePercent = useMemo(() => {
+    if (activeRealtimeCanvas) {
+      return activeRealtimeCanvas.volatilityPercent;
+    }
+
     const high = Math.max(...displayMarket.sparkline);
     const low = Math.min(...displayMarket.sparkline);
     return ((high - low) / Math.max(displayMarket.price, 1)) * 100;
-  }, [displayMarket.price, displayMarket.sparkline]);
-  const sparklineRange = useMemo(() => {
-    const low = Math.min(...displayMarket.sparkline);
-    const high = Math.max(...displayMarket.sparkline);
-    return { low, high };
-  }, [displayMarket.sparkline]);
+  }, [activeRealtimeCanvas, displayMarket.price, displayMarket.sparkline]);
   const orderBookImbalance = displayMarket.orderBookDepth?.imbalance ?? 0;
   const radarSummary = useMemo(() => {
     const enabledDimensions = dimensions.filter((dimension) => dimension.enabled);
@@ -1604,25 +1611,14 @@ export function OverviewPage() {
           />
 
           <div className="chart-card chart-card-highlight">
-            <OverviewPriceSparkline points={displayMarket.sparkline} />
-            <div className="chart-summary-strip">
-              <article className="chart-summary-tile">
-                <span>区间低点</span>
-                <strong>{formatPrice(sparklineRange.low)}</strong>
-              </article>
-              <article className="chart-summary-tile">
-                <span>当前价格</span>
-                <strong>{formatPrice(displayMarket.price)}</strong>
-              </article>
-              <article className="chart-summary-tile">
-                <span>区间高点</span>
-                <strong>{formatPrice(sparklineRange.high)}</strong>
-              </article>
-              <article className="chart-summary-tile">
-                <span>波动区间</span>
-                <strong>{volatilityRangePercent.toFixed(2)}%</strong>
-              </article>
-            </div>
+            <OverviewRealtimeCanvas
+              canvas={displayMarket.realtimeCanvas}
+              depth={displayMarket.orderBookDepth}
+              activeInterval={realtimeCanvasInterval}
+              onIntervalChange={setRealtimeCanvasInterval}
+              currentPrice={displayMarket.price}
+              formatPrice={formatPrice}
+            />
           </div>
 
           <OverviewOrderBookDepthChart
