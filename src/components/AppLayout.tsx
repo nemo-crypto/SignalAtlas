@@ -3,9 +3,10 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useHeaderMarketTicker } from "../hooks/useHeaderMarketTicker";
 
 const navItems = [
-  { to: "/", label: "总览", short: "01" },
-  { to: "/whale-tracker", label: "大单", short: "02" },
-  { to: "/grid-signals", label: "网格", short: "03" }
+  { to: "/", label: "BTC", short: "01" },
+  { to: "/whale-tracker", label: "聪明钱", short: "02" },
+  { to: "/grid-signals", label: "网格", short: "03" },
+  { to: "/a-share-sector-funds", label: "A股基金", short: "04" }
 ];
 
 export function AppLayout() {
@@ -41,18 +42,12 @@ export function AppLayout() {
       <header className="app-header">
         <div className="app-header-inner">
           <div className="app-header-grid">
-            <div className="app-brand-block">
-              <div className="app-brand-lockup">
-                <div className="brand-mark" aria-hidden="true">
-                  <span className="brand-mark-core" />
-                  <span className="brand-mark-orbit" />
-                  <span className="brand-mark-spark brand-mark-spark-a" />
-                  <span className="brand-mark-spark brand-mark-spark-b" />
-                </div>
-                <div className="app-brand-copy">
-                  <p className="eyebrow">CryptoVision / Frontend MVP</p>
-                  <h1>Signal Atlas</h1>
-                </div>
+            <div className="app-brand-block app-brand-logo-only" aria-label="Signal Atlas">
+              <div className="brand-mark" aria-hidden="true">
+                <span className="brand-mark-core" />
+                <span className="brand-mark-orbit" />
+                <span className="brand-mark-spark brand-mark-spark-a" />
+                <span className="brand-mark-spark brand-mark-spark-b" />
               </div>
             </div>
 
@@ -81,28 +76,6 @@ export function AppLayout() {
                 </NavLink>
               ))}
             </nav>
-
-            <div className="app-header-status" aria-label="头部状态">
-              <span className="status-dot" />
-              <div className="app-header-status-body">
-                <div className="app-header-status-text">
-                  <span className="app-header-status-item">Live Hooks</span>
-                  <span className="app-header-status-separator" aria-hidden="true">
-                    ·
-                  </span>
-                  <span className="app-header-status-item">Worker</span>
-                  <span className="app-header-status-separator" aria-hidden="true">
-                    ·
-                  </span>
-                  <span className="app-header-status-item">IndexedDB</span>
-                </div>
-                <div className="app-header-status-rail" aria-hidden="true">
-                  <span className="app-header-status-flow app-header-status-flow-a" />
-                  <span className="app-header-status-flow app-header-status-flow-b" />
-                  <span className="app-header-status-flow app-header-status-flow-c" />
-                </div>
-              </div>
-            </div>
           </div>
           <div className="app-header-ticker" aria-label="24 小时涨跌榜">
             <div className="app-header-ticker-track">

@@ -191,9 +191,9 @@ th {
 
 .app-header-grid {
   display: grid;
-  grid-template-columns: minmax(220px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 1.1rem;
+  gap: 1rem;
 }
 
 .app-header-ticker {
@@ -416,6 +416,13 @@ th {
   position: relative;
   min-width: 0;
   padding-left: 1rem;
+}
+
+.app-brand-logo-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0;
 }
 
 .app-brand-lockup {
@@ -4086,6 +4093,1065 @@ th {
   min-width: 110px;
 }
 
+.ashare-hero-panel::after {
+  background: radial-gradient(circle, rgba(255, 203, 159, 0.28), transparent 64%);
+}
+
+.ashare-hero-badge strong {
+  line-height: 1.08;
+}
+
+.ashare-sector-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.35rem;
+}
+
+.ashare-main-grid {
+  align-items: stretch;
+}
+
+.ashare-note-panel {
+  min-height: 100%;
+  background:
+    linear-gradient(180deg, rgba(18, 25, 35, 0.94), rgba(9, 15, 22, 0.9)),
+    radial-gradient(circle at top right, rgba(255, 159, 90, 0.13), transparent 34%);
+}
+
+.ashare-subfield-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.ashare-period-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.ashare-period-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.58rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-soft);
+}
+
+.ashare-period-legend b {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 159, 90, 0.16);
+  color: #ffd8b5;
+  font-size: 0.74rem;
+}
+
+.ashare-data-note {
+  margin: 1rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.ashare-signal-panel {
+  background:
+    linear-gradient(180deg, rgba(16, 24, 34, 0.96), rgba(8, 13, 20, 0.94)),
+    radial-gradient(circle at 8% 0%, rgba(69, 210, 189, 0.14), transparent 30%),
+    radial-gradient(circle at 92% 0%, rgba(255, 159, 90, 0.14), transparent 32%);
+}
+
+.ashare-signal-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(280px, 0.78fr);
+  gap: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.ashare-signal-focus-card,
+.ashare-signal-distribution-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at top right, rgba(255, 159, 90, 0.14), transparent 38%);
+}
+
+.ashare-signal-focus-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 1.15rem;
+}
+
+.ashare-signal-focus-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -12% -45% auto;
+  width: 210px;
+  height: 210px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 203, 159, 0.24), transparent 66%);
+  pointer-events: none;
+}
+
+.ashare-signal-focus-copy,
+.ashare-signal-focus-score,
+.ashare-signal-focus-next {
+  position: relative;
+  z-index: 1;
+}
+
+.ashare-signal-focus-copy span,
+.ashare-signal-focus-score span,
+.ashare-signal-focus-next span,
+.ashare-signal-distribution-head span {
+  display: inline-block;
+  margin-bottom: 0.42rem;
+  color: #ffcb9f;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ashare-signal-focus-copy h4 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.2vw, 2.2rem);
+  letter-spacing: -0.05em;
+}
+
+.ashare-signal-focus-copy p,
+.ashare-signal-focus-next p {
+  margin: 0.4rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ashare-signal-focus-score {
+  display: grid;
+  place-items: center;
+  align-self: start;
+  width: 92px;
+  min-height: 92px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.ashare-signal-focus-score strong {
+  font-size: 2rem;
+  line-height: 1;
+  color: #fff1df;
+}
+
+.ashare-signal-focus-next {
+  grid-column: 1 / -1;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ashare-signal-distribution-card {
+  padding: 1rem;
+}
+
+.ashare-signal-distribution-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ashare-signal-distribution-head strong {
+  color: #fff1df;
+}
+
+.ashare-signal-distribution-bars {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+}
+
+.ashare-signal-distribution-item {
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.78rem 0.85rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ashare-signal-distribution-item span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: var(--text-soft);
+}
+
+.ashare-signal-distribution-item b {
+  color: #fff1df;
+}
+
+.ashare-signal-distribution-item i {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ashare-signal-distribution-item i::before {
+  content: "";
+  display: block;
+  width: var(--signal-width, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 203, 159, 0.8), rgba(69, 210, 189, 0.78));
+}
+
+.ashare-signal-filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.ashare-signal-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.72rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ashare-signal-filter-group > span {
+  margin-right: 0.15rem;
+  color: #ffcb9f;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ashare-signal-rule-grid,
+.ashare-signal-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.ashare-signal-config-panel {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at top left, rgba(69, 210, 189, 0.1), transparent 34%);
+}
+
+.ashare-signal-config-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ashare-signal-config-head h4 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ashare-signal-config-head .muted {
+  margin: 0.35rem 0 0;
+  line-height: 1.6;
+}
+
+.ashare-signal-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.ashare-config-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem 0.7rem;
+  padding: 0.82rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ashare-config-field span {
+  color: #ffcb9f;
+  font-size: 0.78rem;
+}
+
+.ashare-config-field strong {
+  color: #fff1df;
+  font-variant-numeric: tabular-nums;
+}
+
+.ashare-config-field input {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--accent-2);
+}
+
+.ashare-signal-rule-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.ashare-signal-rule-grid article,
+.ashare-signal-card,
+.ashare-fund-tech,
+.ashare-signal-empty {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ashare-signal-rule-grid article {
+  padding: 1rem;
+}
+
+.ashare-signal-rule-grid span,
+.ashare-fund-tech span,
+.ashare-signal-card-head span {
+  display: inline-block;
+  margin-bottom: 0.38rem;
+  color: #ffcb9f;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ashare-signal-rule-grid strong {
+  display: block;
+  line-height: 1.45;
+}
+
+.ashare-signal-rule-grid p {
+  margin: 0.55rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ashare-signal-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ashare-signal-card {
+  position: relative;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  padding: 1rem;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ashare-signal-card:hover,
+.ashare-fund-card:hover {
+  border-color: rgba(255, 203, 159, 0.22);
+  transform: translateY(-2px);
+}
+
+.ashare-signal-card:focus-visible,
+.ashare-fund-card:focus-visible {
+  outline: none;
+  border-color: rgba(143, 241, 226, 0.52);
+  box-shadow:
+    0 0 0 1px rgba(143, 241, 226, 0.28),
+    0 0 0 4px rgba(69, 210, 189, 0.12);
+}
+
+.ashare-signal-ribbon {
+  position: absolute;
+  top: 0.85rem;
+  right: -2.4rem;
+  width: 9rem;
+  padding: 0.24rem 0;
+  transform: rotate(26deg);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ashare-signal-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ashare-signal-card-head h4 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.ashare-signal-card-head .muted,
+.ashare-signal-summary,
+.ashare-signal-detail {
+  margin: 0.35rem 0 0;
+}
+
+.ashare-signal-card-head > strong {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff1df;
+  font-size: 1.15rem;
+}
+
+.ashare-signal-summary {
+  color: #fff1df;
+  line-height: 1.55;
+}
+
+.ashare-signal-detail {
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ashare-signal-metrics,
+.ashare-fund-tech-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.ashare-signal-metrics span,
+.ashare-fund-tech-strip span {
+  padding: 0.42rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.ashare-check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.ashare-check-grid span {
+  padding: 0.42rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.ashare-check-pass {
+  border: 1px solid rgba(var(--trend-rise-rgb), 0.22);
+  background: rgba(var(--trend-rise-rgb), 0.11);
+  color: var(--trend-rise-soft);
+}
+
+.ashare-check-fail {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-soft);
+}
+
+.ashare-check-details {
+  margin-top: 0.75rem;
+}
+
+.ashare-check-details-title {
+  display: inline-block;
+  margin-bottom: 0.55rem;
+  color: #ffcb9f;
+  font-size: 0.84rem;
+}
+
+.ashare-signal-buy {
+  border-color: rgba(var(--trend-rise-rgb), 0.24);
+  background:
+    linear-gradient(180deg, rgba(58, 24, 24, 0.42), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.ashare-signal-sell {
+  border-color: rgba(var(--trend-fall-rgb), 0.26);
+  background:
+    linear-gradient(180deg, rgba(16, 40, 36, 0.48), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.ashare-signal-watch {
+  border-color: rgba(255, 203, 159, 0.14);
+}
+
+.ashare-signal-empty {
+  padding: 1rem;
+}
+
+.ashare-signal-empty p {
+  margin: 0.35rem 0 0;
+  line-height: 1.65;
+}
+
+.ashare-fund-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ashare-fund-card {
+  position: relative;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  padding: 1rem;
+  cursor: pointer;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(14, 20, 31, 0.96), rgba(7, 12, 20, 0.94)),
+    radial-gradient(circle at top right, rgba(69, 210, 189, 0.1), transparent 36%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 46px rgba(2, 6, 12, 0.2);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ashare-fund-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.04) 48%, transparent 72%);
+  transform: translateX(-100%);
+  transition: transform 560ms ease;
+}
+
+.ashare-fund-card:hover::before {
+  transform: translateX(100%);
+}
+
+.ashare-fund-head,
+.ashare-fund-meta,
+.ashare-trend-card-head,
+.ashare-risk-note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.ashare-fund-head h4 {
+  margin: 0.65rem 0 0.3rem;
+  font-size: 1.28rem;
+  letter-spacing: -0.04em;
+}
+
+.ashare-fund-head .muted {
+  margin: 0;
+}
+
+.ashare-fund-score {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+  min-width: 96px;
+  text-align: right;
+}
+
+.ashare-fund-score span {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.ashare-fund-score strong {
+  font-size: 1.28rem;
+}
+
+.ashare-fund-meta {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  margin-top: 1rem;
+}
+
+.ashare-fund-meta div {
+  padding: 0.82rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ashare-fund-meta span,
+.ashare-risk-note span {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #ffcb9f;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ashare-fund-meta strong {
+  display: block;
+  line-height: 1.45;
+}
+
+.ashare-fund-focus {
+  margin: 1rem 0;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.ashare-fund-tech {
+  margin-bottom: 1rem;
+  padding: 0.9rem;
+}
+
+.ashare-fund-tech > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.ashare-fund-tech strong {
+  color: #fff1df;
+}
+
+.ashare-fund-tech p {
+  margin: 0.35rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.ashare-trend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ashare-trend-card {
+  min-width: 0;
+  padding: 0.82rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    radial-gradient(circle at top right, rgba(255, 159, 90, 0.08), transparent 44%);
+}
+
+.ashare-trend-card-head {
+  align-items: center;
+}
+
+.ashare-trend-card-head span {
+  color: #ffcb9f;
+  font-size: 0.78rem;
+}
+
+.ashare-trend-card p {
+  min-height: 2.8em;
+  margin: 0.55rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.fund-trend-sparkline {
+  width: 100%;
+  height: 76px;
+  margin-top: 0.45rem;
+  overflow: visible;
+}
+
+.fund-trend-sparkline-up {
+  color: var(--trend-rise-soft);
+}
+
+.fund-trend-sparkline-down {
+  color: var(--trend-fall-soft);
+}
+
+.fund-trend-sparkline-neutral {
+  color: #ffe0bf;
+}
+
+.fund-trend-axis {
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.fund-trend-area {
+  stroke: none;
+}
+
+.fund-trend-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(255, 203, 159, 0.16));
+}
+
+.fund-trend-dot {
+  fill: currentColor;
+  stroke: rgba(10, 16, 24, 0.92);
+  stroke-width: 1.5;
+}
+
+.fund-technical-chart {
+  margin-top: 0.9rem;
+  padding: 0.72rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, rgba(4, 9, 16, 0.38), rgba(255, 255, 255, 0.025)),
+    radial-gradient(circle at top right, rgba(255, 203, 159, 0.08), transparent 42%);
+}
+
+.fund-technical-chart svg {
+  width: 100%;
+  height: 156px;
+  overflow: visible;
+}
+
+.fund-technical-chart-buy {
+  color: var(--trend-rise-soft);
+}
+
+.fund-technical-chart-sell {
+  color: var(--trend-fall-soft);
+}
+
+.fund-technical-chart-watch {
+  color: #ffe0bf;
+}
+
+.fund-technical-area {
+  stroke: none;
+}
+
+.fund-technical-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(255, 203, 159, 0.14));
+}
+
+.fund-technical-support,
+.fund-technical-resistance,
+.fund-technical-boll,
+.fund-technical-boll-middle,
+.fund-technical-current-line {
+  stroke-linecap: round;
+}
+
+.fund-technical-support {
+  stroke: rgba(var(--trend-rise-rgb), 0.78);
+  stroke-width: 1.4;
+  stroke-dasharray: 5 5;
+}
+
+.fund-technical-resistance {
+  stroke: rgba(var(--trend-fall-rgb), 0.78);
+  stroke-width: 1.4;
+  stroke-dasharray: 5 5;
+}
+
+.fund-technical-boll {
+  stroke: rgba(255, 203, 159, 0.34);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+}
+
+.fund-technical-boll-middle {
+  stroke: rgba(255, 203, 159, 0.18);
+  stroke-width: 1;
+}
+
+.fund-technical-current-line {
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+.fund-technical-current-dot {
+  fill: currentColor;
+  stroke: rgba(8, 14, 24, 0.92);
+  stroke-width: 1.6;
+}
+
+.fund-technical-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.85rem;
+  margin-top: 0.55rem;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
+.fund-technical-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.fund-technical-chart-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.fund-technical-legend-price {
+  background: currentColor;
+}
+
+.fund-technical-legend-support {
+  background: var(--trend-rise);
+}
+
+.fund-technical-legend-resistance {
+  background: var(--trend-fall);
+}
+
+.fund-technical-legend-boll {
+  background: #ffcb9f;
+}
+
+.ashare-risk-note {
+  margin: 1rem 0 0;
+  padding: 0.9rem 1rem;
+  align-items: flex-start;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ashare-detail-link {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.9rem;
+}
+
+.ashare-detail-hero::after {
+  background: radial-gradient(circle, rgba(69, 210, 189, 0.28), transparent 64%);
+}
+
+.ashare-detail-period-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+}
+
+.ashare-detail-chart-panel {
+  background:
+    linear-gradient(180deg, rgba(14, 20, 31, 0.98), rgba(7, 12, 20, 0.96)),
+    radial-gradient(circle at top right, rgba(69, 210, 189, 0.12), transparent 36%);
+}
+
+.fund-detail-chart {
+  padding: 1rem;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.014)),
+    radial-gradient(circle at top left, rgba(255, 159, 90, 0.1), transparent 38%);
+}
+
+.fund-detail-chart svg {
+  width: 100%;
+  height: min(62vh, 560px);
+  min-height: 420px;
+  overflow: visible;
+}
+
+.fund-detail-grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 4 8;
+}
+
+.fund-detail-axis-label,
+.fund-detail-level-label {
+  fill: rgba(255, 240, 223, 0.74);
+  font-size: 12px;
+}
+
+.fund-detail-area {
+  stroke: none;
+}
+
+.fund-detail-price-line {
+  fill: none;
+  stroke: #ffcb9f;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 12px rgba(255, 203, 159, 0.2));
+}
+
+.fund-detail-support,
+.fund-detail-resistance,
+.fund-detail-boll,
+.fund-detail-boll-middle,
+.fund-detail-macd-zero {
+  stroke-linecap: round;
+}
+
+.fund-detail-support {
+  stroke: rgba(var(--trend-rise-rgb), 0.82);
+  stroke-width: 2;
+  stroke-dasharray: 8 8;
+}
+
+.fund-detail-resistance {
+  stroke: rgba(var(--trend-fall-rgb), 0.82);
+  stroke-width: 2;
+  stroke-dasharray: 8 8;
+}
+
+.fund-detail-boll {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 8;
+}
+
+.fund-detail-boll-middle,
+.fund-detail-macd-zero {
+  stroke: rgba(255, 203, 159, 0.22);
+  stroke-width: 1.3;
+}
+
+.fund-detail-current-dot {
+  fill: #ffcb9f;
+  stroke: rgba(8, 14, 24, 0.92);
+  stroke-width: 2;
+}
+
+.fund-detail-macd-bar-up {
+  fill: rgba(var(--trend-rise-rgb), 0.72);
+}
+
+.fund-detail-macd-bar-down {
+  fill: rgba(var(--trend-fall-rgb), 0.72);
+}
+
+.fund-detail-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 0.9rem;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+}
+
+.fund-detail-chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.fund-detail-chart-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.fund-detail-legend-price {
+  background: #ffcb9f;
+}
+
+.fund-detail-legend-support {
+  background: var(--trend-rise);
+}
+
+.fund-detail-legend-resistance {
+  background: var(--trend-fall);
+}
+
+.fund-detail-legend-boll {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.fund-detail-legend-macd {
+  background: linear-gradient(180deg, var(--trend-rise), var(--trend-fall));
+}
+
+.ashare-detail-check-list,
+.ashare-detail-profile-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ashare-detail-check-list article,
+.ashare-detail-profile-grid article {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+}
+
+.ashare-detail-check-list article p {
+  margin: 0.35rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.ashare-detail-profile-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ashare-detail-profile-grid article {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ashare-detail-profile-grid span {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #ffcb9f;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .whale-control-panel {
   display: grid;
   gap: 1rem;
@@ -4405,7 +5471,14 @@ th {
   }
 
   .strategy-router-metrics,
-  .strategy-router-grid {
+  .strategy-router-grid,
+  .ashare-fund-grid,
+  .ashare-detail-profile-grid,
+  .ashare-signal-command-center,
+  .ashare-signal-filter-row,
+  .ashare-signal-config-grid,
+  .ashare-signal-rule-grid,
+  .ashare-signal-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -4510,7 +5583,13 @@ th {
   .heat-grid,
   .grid-chart-summary-strip,
   .strategy-router-metrics,
-  .strategy-router-grid {
+  .strategy-router-grid,
+  .ashare-fund-grid,
+  .ashare-signal-config-grid,
+  .ashare-signal-rule-grid,
+  .ashare-signal-grid,
+  .ashare-fund-meta,
+  .ashare-trend-grid {
     grid-template-columns: 1fr;
   }
 
@@ -4541,6 +5620,10 @@ th {
     width: 100%;
   }
 
+  .ashare-sector-switch .symbol-chip {
+    min-width: 100%;
+  }
+
   .top-nav {
     display: grid;
     grid-template-columns: 1fr;
@@ -4555,6 +5638,27 @@ th {
   .grid-chart-legend {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .ashare-fund-head,
+  .ashare-signal-focus-card,
+  .ashare-signal-config-head,
+  .ashare-signal-card-head,
+  .ashare-risk-note {
+    flex-direction: column;
+  }
+
+  .ashare-fund-score {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .ashare-signal-focus-next {
+    grid-column: auto;
+  }
+
+  .fund-detail-chart svg {
+    min-height: 340px;
   }
 
   .strategy-context-actions {

@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
+import { AShareFundDetailPage } from "./pages/AShareFundDetailPage";
+import { AShareSectorFundsPage } from "./pages/AShareSectorFundsPage";
 import { GridSignalPage } from "./pages/GridSignalPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { WhaleTrackerPage } from "./pages/WhaleTrackerPage";
@@ -11,6 +13,10 @@ function App() {
         <Route index element={<OverviewPage />} />
         <Route path="/whale-tracker" element={<WhaleTrackerPage />} />
         <Route path="/grid-signals" element={<GridSignalPage />} />
+        <Route path="/ashare-funds" element={<AShareSectorFundsPage />} />
+        <Route path="/ashare-funds/:code" element={<AShareFundDetailPage />} />
+        <Route path="/a-share-sector-funds" element={<AShareSectorFundsPage />} />
+        <Route path="/a-share-sector-funds/:code" element={<AShareFundDetailPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
