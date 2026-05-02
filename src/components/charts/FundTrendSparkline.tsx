@@ -53,7 +53,7 @@ export function FundTrendSparkline({
     <svg
       className={`fund-trend-sparkline fund-trend-sparkline-${tone}`}
       viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
       <defs>

@@ -1,4 +1,4 @@
-import type { MarketOverview } from "../data/mockData";
+import type { MarketOverview } from "../data/marketOverviewData";
 import type { RawMarketSnapshot } from "./marketAnalysis";
 
 type PendingRequest = {

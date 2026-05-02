@@ -221,11 +221,60 @@ function formatTechnicalValue(value: number): string {
   return value.toFixed(1);
 }
 
+function isWaitingForMarketData(fund: Pick<FundWithSector, "trends">): boolean {
+  return Object.values(fund.trends).every(
+    (trend) =>
+      trend.signal.includes("等待真实行情") ||
+      (trend.changePercent === 0 && trend.series.every((value) => value === 100))
+  );
+}
+
+function buildWaitingTechnicalSignal(
+  fund: Pick<FundWithSector, "name">,
+  values: number[]
+): TechnicalSignal {
+  const currentValue = values[values.length - 1] ?? 100;
+  const waitingChecks: TechnicalSignalCheck[] = [
+    {
+      id: "waiting-market-data",
+      label: "等待真实行情",
+      passed: false,
+      detail: "真实 K 线或缓存真实行情返回后再计算"
+    }
+  ];
+
+  return {
+    action: "watch",
+    score: 0,
+    title: "等待真实行情",
+    summary: `${fund.name} 当前没有真实或缓存 K 线，不生成买入/卖出观察。`,
+    detail: "页面仅展示中性基线；接入真实行情后才会计算支撑位、压力位、MACD 与布林轨。",
+    currentValue,
+    support: currentValue,
+    resistance: currentValue,
+    macd: 0,
+    macdSignal: 0,
+    macdHistogram: 0,
+    bollingerUpper: currentValue,
+    bollingerMiddle: currentValue,
+    bollingerLower: currentValue,
+    supportDistancePercent: 0,
+    resistanceDistancePercent: 0,
+    buyChecks: waitingChecks,
+    sellChecks: waitingChecks
+  };
+}
+
 function getTechnicalSignal(
   fund: FundWithSector,
   config: TechnicalSignalConfig
 ): TechnicalSignal {
   const values = fund.trends.year.series;
+
+  if (isWaitingForMarketData(fund)) {
+    return buildWaitingTechnicalSignal(fund, values);
+  }
+
   const currentValue = values[values.length - 1] ?? 100;
   const supportWindow = values.slice(-Math.max(config.supportLookback, 2));
   const resistanceWindow = values.slice(-Math.max(config.resistanceLookback, 2));
@@ -483,7 +532,7 @@ export function AShareSectorFundsPage() {
           ...initialMarketDataState,
           status: "error",
           errorMessage:
-            error instanceof Error ? error.message : "真实行情加载失败，已使用本地降级数据"
+            error instanceof Error ? error.message : "真实行情加载失败，已使用等待真实行情基线"
         });
       });
 
@@ -552,10 +601,10 @@ export function AShareSectorFundsPage() {
         ? `部分真实行情 ${marketDataState.loadedFundCount}/${marketDataState.totalFundCount}`
         : marketDataState.status === "loading"
           ? "真实行情加载中"
-          : "本地降级数据";
+          : "等待真实行情基线";
   const marketDataNote =
     marketDataState.status === "success" || marketDataState.status === "partial"
-      ? `已接入新浪财经 ETF 日 K，实时 ${marketDataState.liveFundCount} 只，缓存 ${marketDataState.cachedFundCount} 只，降级 ${marketDataState.fallbackFundCount} 只；最近刷新 ${formatMarketUpdatedAt(marketDataState.updatedAt)}。${
+      ? `已接入新浪财经 ETF 日 K，实时 ${marketDataState.liveFundCount} 只，缓存 ${marketDataState.cachedFundCount} 只，等待行情 ${marketDataState.fallbackFundCount} 只；最近刷新 ${formatMarketUpdatedAt(marketDataState.updatedAt)}。${
           marketDataState.qualityWarnings.length > 0
             ? ` 数据质量提示：${marketDataState.qualityWarnings.slice(0, 2).join("；")}。`
             : ""
@@ -710,7 +759,7 @@ export function AShareSectorFundsPage() {
           <p className="hero-copy">
             页面采用“板块 → 细分领域 → 指数基金 → 三周期走势”的层级，
             方便快速比较白酒、半导体、创新药、新能源车、券商、红利等方向。
-            当前走势优先使用新浪财经 ETF 日 K 真实行情，接口异常时会自动降级到本地样本。
+            当前走势优先使用新浪财经 ETF 日 K 真实行情，接口异常时只展示中性基线并提示等待真实行情。
           </p>
           <div className="ashare-sector-switch" aria-label="A 股板块筛选">
             <button

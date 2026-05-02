@@ -60,7 +60,7 @@ export function FundDetailTechnicalChart({
 
   return (
     <div className="fund-detail-chart">
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
           <linearGradient id="fund-detail-price-fill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(255, 203, 159, 0.24)" />

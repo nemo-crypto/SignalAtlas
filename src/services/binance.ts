@@ -1,4 +1,4 @@
-import { type MarketOverview } from "../data/mockData";
+import { type MarketOverview } from "../data/marketOverviewData";
 import {
   analyzeMarketSnapshot
 } from "./marketAnalysisWorkerClient";
@@ -144,7 +144,7 @@ export async function fetchLiveMarketOverview(
     return {
       overview: null,
       status: "fallback",
-      note: "Binance 公共行情暂不可用，本轮不会回退到本地 mock 数据。",
+      note: "Binance 公共行情暂不可用，本轮仅返回中性基线。",
       updatedAt: Date.now(),
       tradeSeed: []
     };

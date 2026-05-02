@@ -186,14 +186,14 @@ export function WhaleTrackerPage() {
   };
 
   return (
-    <section className="page-content">
+    <section className="page-content crypto-market-theme">
       <div className="hero-panel whale-panel">
         <div>
-          <p className="eyebrow">Whale Tracker / CR_2</p>
+          <p className="eyebrow">Whale Tracker</p>
           <h3>监听币安大户买入页面</h3>
           <p className="hero-copy">
-            这一版按 CR_2.MD 升级为真实数据监控台：成交流来自 Binance `aggTrade`，
-            买墙来自 Binance 深度快照，背景确认来自 Binance Futures 公共接口；原先伪造的链上地址样本已移除。
+            成交流来自 Binance `aggTrade`，买墙来自 Binance 深度快照，
+            背景确认来自 Binance Futures 公共接口；页面只基于真实公共行情生成观察结论。
           </p>
         </div>
         <div className={`hero-badge signal-hero-badge tone-${verdict.tone}`}>
@@ -437,7 +437,7 @@ export function WhaleTrackerPage() {
               })
             ) : (
               <div className="whale-empty-state">
-                <strong>当前没有匹配的成交样本</strong>
+                <strong>当前没有匹配的成交记录</strong>
                 <p className="muted">可以尝试放宽金额阈值、扩大时间窗，或切换到“显示买卖双方”。</p>
               </div>
             )}
@@ -463,7 +463,7 @@ export function WhaleTrackerPage() {
             <div className="signal-board-meta">
               <div>
                 <span>当前焦点</span>
-                <strong>{focusedTrade ? `${focusedTrade.symbol} · ${formatCompactUsd(focusedTrade.usdValue)}` : "暂无样本"}</strong>
+                <strong>{focusedTrade ? `${focusedTrade.symbol} · ${formatCompactUsd(focusedTrade.usdValue)}` : "暂无成交"}</strong>
               </div>
               <div>
                 <span>买墙确认位</span>
@@ -554,7 +554,7 @@ export function WhaleTrackerPage() {
         <SectionHeader
           eyebrow="Observation Journal"
           title="已保存观察历史"
-          description="把最近关注过的鲸鱼样本、筛选条件和当时判断持久化到 IndexedDB，便于回看。"
+          description="把最近关注过的鲸鱼成交、筛选条件和当时判断持久化到 IndexedDB，便于回看。"
         />
 
         <div className="whale-history-list">
@@ -584,9 +584,9 @@ export function WhaleTrackerPage() {
                 </div>
 
                 <div className="whale-history-meta">
-                  <span>样本成交 {formatCompactUsd(item.usdValue)}</span>
+                  <span>成交金额 {formatCompactUsd(item.usdValue)}</span>
                   <span>
-                    价格 {formatPrice(item.price)} · 样本时延 {item.minutesAgo} 分钟
+                    价格 {formatPrice(item.price)} · 记录时延 {item.minutesAgo} 分钟
                   </span>
                   <span>
                     筛选 {item.selectedWindow}m / {formatCompactUsd(item.minTradeValue)} / {item.confidenceFilter} / {item.aggressiveOnly ? "仅买入" : "买卖双向"}
@@ -612,7 +612,7 @@ export function WhaleTrackerPage() {
             <div className="whale-empty-state">
               <strong>当前还没有已保存的观察记录</strong>
               <p className="muted">
-                选择成交样本并形成判断后，页面会自动把该观察记录写入 IndexedDB。
+                选择成交记录并形成判断后，页面会自动把该观察记录写入 IndexedDB。
               </p>
             </div>
           )}
@@ -673,7 +673,7 @@ export function WhaleTrackerPage() {
           <SectionHeader
             eyebrow="Futures Context"
             title="真实资金背景观察"
-            description="原先的链上地址样本属于静态占位，现已移除；这里改为展示 Binance Futures 公共接口返回的真实杠杆背景。"
+            description="展示 Binance Futures 公共接口返回的真实杠杆背景，用资金费率、多空比和未平仓变化辅助确认。"
           />
 
           <div className="context-grid whale-transfer-grid">
@@ -710,7 +710,7 @@ export function WhaleTrackerPage() {
               })
             ) : (
               <div className="whale-empty-state whale-transfer-empty">
-                <strong>当前还没有可用的真实背景样本</strong>
+                <strong>当前还没有可用的真实背景记录</strong>
                 <p className="muted">等待 Binance Futures 公共接口返回首个快照后，这里会自动刷新。</p>
               </div>
             )}
@@ -721,7 +721,7 @@ export function WhaleTrackerPage() {
           <SectionHeader
             eyebrow="Methods & Guardrails"
             title="监控方法与最佳实践"
-            description="CR_2.MD 的重点不是“只看一个指标”，而是把成交、订单簿和真实背景拼成完整判断。"
+            description="不只看单一指标，而是把成交、订单簿和真实背景拼成完整判断。"
           />
 
           <div className="heat-grid whale-method-grid">

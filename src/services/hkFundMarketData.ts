@@ -209,7 +209,7 @@ function getKlineQualityWarning(fund: HkSectorFund, klines: MarketKline[]): stri
   }
 
   if (pickMonthEndKlines(klines).length < 8) {
-    return `${fund.code} 近一年月末样本不足 8 个`;
+    return `${fund.code} 近一年月末 K 线不足 8 个`;
   }
 
   return null;

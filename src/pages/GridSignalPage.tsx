@@ -100,11 +100,29 @@ function getPreset(symbol: GridSymbol): GridPreset {
   return gridPresets.find((preset) => preset.symbol === symbol) ?? gridPresets[0];
 }
 
-function createConfigFromPreset(preset: GridPreset): GridConfig {
+function buildLiveRangeFromPrice(preset: GridPreset, currentPrice: number) {
+  if (!hasUsableGridPrice(currentPrice)) {
+    return {
+      lowerPrice: 0,
+      upperPrice: 0
+    };
+  }
+
+  const halfRange = preset.defaultRangePercent / 200;
+
+  return {
+    lowerPrice: fixPrecision(currentPrice * (1 - halfRange), preset.symbol),
+    upperPrice: fixPrecision(currentPrice * (1 + halfRange), preset.symbol)
+  };
+}
+
+function createConfigFromPreset(preset: GridPreset, currentPrice = 0): GridConfig {
+  const liveRange = buildLiveRangeFromPrice(preset, currentPrice);
+
   return {
     symbol: preset.symbol,
-    lowerPrice: preset.lowerPrice,
-    upperPrice: preset.upperPrice,
+    lowerPrice: liveRange.lowerPrice,
+    upperPrice: liveRange.upperPrice,
     gridCount: preset.gridCount,
     investPerGrid: preset.investPerGrid,
     feeRateBps: DEFAULT_FEE_RATE_BPS,
@@ -123,6 +141,10 @@ function fixPrecision(value: number, symbol: GridSymbol): number {
 }
 
 function calculateGridSpacing(config: GridConfig): number {
+  if (config.lowerPrice <= 0 || config.upperPrice <= 0 || config.lowerPrice >= config.upperPrice) {
+    return 0;
+  }
+
   const rawSpacing = (config.upperPrice - config.lowerPrice) / config.gridCount;
   return fixPrecision(rawSpacing, config.symbol);
 }
@@ -461,8 +483,8 @@ function normalizeRuntime(
     const rebuiltState = rebuildTradeStateFromHistory(config, liveHistory);
     const migrationNote =
       liveHistory.length > 0
-        ? "检测到旧版模拟快照，已清空伪造价格轨迹，仅保留真实成交记录。"
-        : "检测到旧版占位价格/模拟快照，已清空伪造成交与价格轨迹，请等待 Binance 实时价格恢复。";
+        ? "检测到旧版纸交易快照，已清空非真实价格轨迹，仅保留真实成交记录。"
+        : "检测到旧版纸交易快照，已清空非真实成交与价格轨迹，请等待 Binance 实时价格恢复。";
 
     return {
       ...baseRuntime,
@@ -569,14 +591,15 @@ function buildRuntimeFromRouteSeed(routeSeed: GridRouteSeed, preset: GridPreset)
   );
 }
 
-function createRuntimeFromKnownPrice(preset: GridPreset, currentPrice: number): GridRuntime {
+function createRuntimeFromKnownPrice(config: GridConfig, currentPrice: number): GridRuntime {
+  const preset = getPreset(config.symbol);
   const baseRuntime = createInitialRuntime(preset);
 
   if (!hasUsableGridPrice(currentPrice)) {
     return baseRuntime;
   }
 
-  const nextPrice = fixPrecision(currentPrice, preset.symbol);
+  const nextPrice = fixPrecision(currentPrice, config.symbol);
 
   return {
     ...baseRuntime,
@@ -585,9 +608,11 @@ function createRuntimeFromKnownPrice(preset: GridPreset, currentPrice: number): 
     priceTrail: [nextPrice],
     lastSignal: "已加载最近一次真实价格，可在实时流保持在线时启动纸交易。",
     rangeState:
-      nextPrice < preset.lowerPrice
+      config.lowerPrice <= 0 || config.upperPrice <= 0
+        ? "inside"
+        : nextPrice < config.lowerPrice
         ? "below"
-        : nextPrice > preset.upperPrice
+        : nextPrice > config.upperPrice
           ? "above"
           : "inside"
   };
@@ -756,7 +781,7 @@ function processGridPrice(
     lastSignal =
       source === "live"
         ? "Binance 实时成交正在推进网格，等待命中下一条价格线。"
-        : "当前执行记录来自历史模拟，不代表新的实时推进。";
+        : "当前执行记录来自历史纸交易快照，不代表新的实时推进。";
     lastSignalTone = runtime.openSlots.length > 0 ? "bullish" : "neutral";
   }
 
@@ -865,7 +890,9 @@ export function GridSignalPage() {
     hasRuntimePrice &&
     (runtime.currentPrice <= invalidationPrice || runtime.currentPrice >= upperBreakoutPrice);
   const configError =
-    config.lowerPrice >= config.upperPrice
+    config.lowerPrice <= 0 || config.upperPrice <= 0
+      ? "等待 Binance 真实价格校准区间，或手动输入有效上下沿。"
+      : config.lowerPrice >= config.upperPrice
       ? "最低价必须小于最高价。"
       : config.gridCount < 5
         ? "网格数量至少需要 5 格。"
@@ -1007,6 +1034,31 @@ export function GridSignalPage() {
   }, [config, isRunning]);
 
   useEffect(() => {
+    if (
+      isRunning ||
+      !isSnapshotReady ||
+      !hasUsableGridPrice(marketState.currentPrice) ||
+      (config.lowerPrice > 0 && config.upperPrice > 0)
+    ) {
+      return;
+    }
+
+    const preset = getPreset(config.symbol);
+    const nextConfig = createConfigFromPreset(preset, marketState.currentPrice);
+
+    setConfig(nextConfig);
+    setRuntime(createRuntimeFromKnownPrice(nextConfig, marketState.currentPrice));
+    setRouteNote((current) => current ?? "已用 Binance 最新真实价格自动校准默认网格区间。");
+  }, [
+    config.lowerPrice,
+    config.symbol,
+    config.upperPrice,
+    isRunning,
+    isSnapshotReady,
+    marketState.currentPrice
+  ]);
+
+  useEffect(() => {
     if (isRunning || !Number.isFinite(marketState.currentPrice) || marketState.currentPrice <= 0) {
       return;
     }
@@ -1093,6 +1145,19 @@ export function GridSignalPage() {
     });
   }, [config, isSnapshotReady, runtime, selectedPresetSymbol]);
 
+  const liveReadinessScore =
+    !hasRuntimePrice || configError
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            95,
+            58 +
+              (marketState.connectionState === "live" ? 20 : 0) +
+              (runtime.rangeState === "inside" ? 12 : -18) +
+              (marketState.change24h != null && Math.abs(marketState.change24h) <= 5 ? 5 : 0)
+          )
+        );
   const readinessTone: GridTone =
     !hasRuntimePrice
       ? "neutral"
@@ -1100,9 +1165,9 @@ export function GridSignalPage() {
       ? "bearish"
       : runtime.rangeState !== "inside"
       ? "bearish"
-      : activePreset.readiness >= 80
+      : liveReadinessScore >= 80
         ? "bullish"
-        : activePreset.readiness >= 70
+        : liveReadinessScore >= 70
           ? "neutral"
           : "bearish";
 
@@ -1115,11 +1180,11 @@ export function GridSignalPage() {
       ? "跌破区间"
       : runtime.rangeState === "above"
         ? "突破区间"
-        : isRunning
-          ? runtime.openSlots.length > 0
-            ? "运行中"
-            : "等待命中"
-          : activePreset.readiness >= 80
+          : isRunning
+            ? runtime.openSlots.length > 0
+              ? "运行中"
+              : "等待命中"
+          : liveReadinessScore >= 80
             ? "准备就绪"
             : "谨慎启动";
 
@@ -1194,10 +1259,11 @@ export function GridSignalPage() {
 
   const resetToPresetDefaults = () => {
     const preset = getPreset(config.symbol);
+    const nextConfig = createConfigFromPreset(preset, marketState.currentPrice);
     setIsRunning(false);
     setSelectedPresetSymbol(preset.symbol);
-    setConfig(createConfigFromPreset(preset));
-    setRuntime(createRuntimeFromKnownPrice(preset, marketState.currentPrice));
+    setConfig(nextConfig);
+    setRuntime(createRuntimeFromKnownPrice(nextConfig, marketState.currentPrice));
     setSavedAt(null);
     setRouteNote(null);
   };
@@ -1219,11 +1285,12 @@ export function GridSignalPage() {
     }
 
     dismissRouteNote();
+    const nextConfig = createConfigFromPreset(preset, preset.symbol === config.symbol ? marketState.currentPrice : 0);
     setSelectedPresetSymbol(preset.symbol);
-    setConfig(createConfigFromPreset(preset));
+    setConfig(nextConfig);
     setRuntime(
       preset.symbol === config.symbol
-        ? createRuntimeFromKnownPrice(preset, marketState.currentPrice)
+        ? createRuntimeFromKnownPrice(nextConfig, marketState.currentPrice)
         : createInitialRuntime(preset)
     );
   };
@@ -1238,7 +1305,7 @@ export function GridSignalPage() {
 
   const resetStrategy = () => {
     setIsRunning(false);
-    setRuntime(createRuntimeFromKnownPrice(activePreset, marketState.currentPrice));
+    setRuntime(createRuntimeFromKnownPrice(config, marketState.currentPrice));
   };
 
   const toggleStrategy = () => {
@@ -1262,21 +1329,21 @@ export function GridSignalPage() {
   };
 
   return (
-    <section className="page-content">
+    <section className="page-content crypto-market-theme">
       <div className="hero-panel grid-panel">
         <div>
-          <p className="eyebrow">Grid Strategy / CR_3</p>
+          <p className="eyebrow">Grid Strategy</p>
           <h3>震荡市网格策略工作台</h3>
           <p className="hero-copy">
-            这一版按 CR_3.MD 把网格页升级为可交互策略台：支持参数配置、纸交易模拟、
-            网格命中、订单历史、本地快照和区间失效提醒，不再只是静态推荐列表。
+            支持参数配置、纸交易演练、网格命中、订单历史、本地快照和区间失效提醒；
+            价格区间由真实行情或用户输入校准，不再依赖固定价格模板。
           </p>
         </div>
         <div className={`hero-badge signal-hero-badge tone-${readinessTone}`}>
           <span>Grid Readiness</span>
           <strong>{readinessLabel}</strong>
           <small>
-            推荐度 {activePreset.readiness}% · {activePreset.symbol} · {activePreset.mode}
+            实时评分 {liveReadinessScore}% · {activePreset.symbol} · {activePreset.mode}
           </small>
         </div>
       </div>
@@ -1545,19 +1612,23 @@ export function GridSignalPage() {
 
           <div className="metric-grid grid-metric-grid">
             <article className="metric-card">
-              <span>推荐买入区</span>
-              <strong>{activePreset.buyZone}</strong>
-              <p>{activePreset.trigger}</p>
+              <span>实时校准区间</span>
+              <strong>
+                {config.lowerPrice > 0 && config.upperPrice > 0
+                  ? `${formatPrice(config.lowerPrice, config.symbol)} - ${formatPrice(config.upperPrice, config.symbol)}`
+                  : "等待真实价格"}
+              </strong>
+              <p>{hasRuntimePrice ? "基于 Binance 最新真实价格，可继续手动微调。" : activePreset.trigger}</p>
             </article>
             <article className="metric-card">
               <span>支撑 / 阻力</span>
-              <strong>{activePreset.support}</strong>
-              <p>{activePreset.resistance}</p>
+              <strong>{config.lowerPrice > 0 ? formatPrice(config.lowerPrice, config.symbol) : "等待下沿"}</strong>
+              <p>{config.upperPrice > 0 ? formatPrice(config.upperPrice, config.symbol) : "等待上沿"}</p>
             </article>
             <article className="metric-card">
               <span>波动提示</span>
-              <strong>{activePreset.volatilityHint}</strong>
-              <p>资金费率 {activePreset.fundingRate}</p>
+              <strong>模板宽度 ±{(activePreset.defaultRangePercent / 2).toFixed(1)}%</strong>
+              <p>{marketState.change24h != null ? `24H ${formatPercent(marketState.change24h)}` : "等待 Binance 24H 真实行情"}</p>
             </article>
           </div>
 
@@ -1621,8 +1692,8 @@ export function GridSignalPage() {
         <section className="panel">
           <SectionHeader
             eyebrow="Pair Ranking"
-            title="候选交易对与推荐参数"
-            description="保留 PRD 的候选排序视图，并允许一键应用推荐配置。"
+            title="候选交易对与实时校准模板"
+            description="不再展示静态买入区间；选择交易对后会等待 Binance 实时价格，并按模板宽度自动生成初始网格。"
           />
 
           <div className="table-wrap">
@@ -1630,10 +1701,10 @@ export function GridSignalPage() {
               <thead>
                 <tr>
                   <th>交易对</th>
-                  <th>市场状态</th>
+                  <th>数据状态</th>
                   <th>推荐模式</th>
-                  <th>买入区间</th>
-                  <th>优先级</th>
+                  <th>校准规则</th>
+                  <th>参数来源</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -1641,10 +1712,10 @@ export function GridSignalPage() {
                 {gridPresets.map((preset) => (
                   <tr key={preset.symbol}>
                     <td>{preset.symbol}</td>
-                    <td>{preset.regime}</td>
+                    <td>{preset.symbol === config.symbol ? marketStatusLabel : "选择后连接 Binance"}</td>
                     <td>{preset.mode}</td>
-                    <td>{preset.buyZone}</td>
-                    <td>{preset.priority}</td>
+                    <td>实时价 ±{(preset.defaultRangePercent / 2).toFixed(1)}%</td>
+                    <td>模板参数 + 真实价格</td>
                     <td>
                       <button
                         type="button"
@@ -1758,7 +1829,7 @@ export function GridSignalPage() {
           <SectionHeader
             eyebrow="Methods & Guardrails"
             title="实施方法与风控提示"
-            description="把 PRD 中的实现思路、使用前提和实操边界一起展示出来。"
+            description="把使用前提、运行步骤和实操边界一起展示出来。"
           />
 
           <div className="heat-grid grid-method-grid">

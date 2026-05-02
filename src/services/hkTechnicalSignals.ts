@@ -122,6 +122,47 @@ function getEmaSeries(values: number[], period: number): number[] {
   }, []);
 }
 
+function isWaitingForMarketData(fund: { trends: Record<string, { signal: string; changePercent: number; series: number[] }> }): boolean {
+  return Object.values(fund.trends).every(
+    (trend) =>
+      trend.signal.includes("等待真实行情") ||
+      (trend.changePercent === 0 && trend.series.every((value) => value === 100))
+  );
+}
+
+function buildWaitingSignal(fund: { name: string }, values: number[]): TechnicalSignal {
+  const currentValue = values[values.length - 1] ?? 100;
+  const waitingChecks: TechnicalSignalCheck[] = [
+    {
+      id: "waiting-market-data",
+      label: "等待真实行情",
+      passed: false,
+      detail: "真实 K 线或缓存真实行情返回后再计算"
+    }
+  ];
+
+  return {
+    action: "watch",
+    score: 0,
+    title: "等待真实行情",
+    summary: `${fund.name} 当前没有真实或缓存 K 线，不生成买入/卖出观察。`,
+    detail: "页面仅展示中性基线；接入真实行情后才会计算支撑位、压力位、MACD 与布林轨。",
+    currentValue,
+    support: currentValue,
+    resistance: currentValue,
+    macd: 0,
+    macdSignal: 0,
+    macdHistogram: 0,
+    bollingerUpper: currentValue,
+    bollingerMiddle: currentValue,
+    bollingerLower: currentValue,
+    supportDistancePercent: 0,
+    resistanceDistancePercent: 0,
+    buyChecks: waitingChecks,
+    sellChecks: waitingChecks
+  };
+}
+
 function getMacd(values: number[], config: TechnicalSignalConfig) {
   const fastEma = getEmaSeries(values, config.macdFastPeriod);
   const slowEma = getEmaSeries(values, config.macdSlowPeriod);
@@ -159,6 +200,10 @@ export function buildPeriodSeries(fund: HkSectorFund, period: FundDetailPeriod):
     return weekSeries;
   }
 
+  if (isWaitingForMarketData(fund)) {
+    return Array.from({ length: 20 }, () => 100);
+  }
+
   const latestWeek = weekSeries.slice(-5);
   const start = latestWeek[0] ?? 100;
 
@@ -178,6 +223,10 @@ export function getTechnicalSignalFromValues(
   values: number[],
   config: TechnicalSignalConfig
 ): TechnicalSignal {
+  if (isWaitingForMarketData(fund)) {
+    return buildWaitingSignal(fund, values);
+  }
+
   const currentValue = values[values.length - 1] ?? 100;
   const supportWindow = values.slice(-Math.max(config.supportLookback, 2));
   const resistanceWindow = values.slice(-Math.max(config.resistanceLookback, 2));

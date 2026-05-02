@@ -1,4 +1,4 @@
-import { type MarketOverview, type SignalHistoryItem } from "../data/mockData";
+import { type MarketOverview, type SignalHistoryItem } from "../data/marketOverviewData";
 
 const DB_NAME = "cryptoquant-live";
 const DB_VERSION = 5;

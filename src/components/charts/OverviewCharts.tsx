@@ -5,7 +5,7 @@ import type {
   RealtimeCanvasData,
   RealtimeCanvasInterval,
   RealtimeCanvasSnapshot
-} from "../../data/mockData";
+} from "../../data/marketOverviewData";
 
 function normalizeSvgId(value: string): string {
   return value.replace(/:/g, "");
@@ -400,7 +400,7 @@ export function OverviewRealtimeCanvas({
         </div>
       </div>
 
-      <svg className="sparkline realtime-canvas-svg" viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} preserveAspectRatio="none" aria-hidden="true">
+      <svg className="sparkline realtime-canvas-svg" viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
           <linearGradient id={`${gradientId}-band`} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(106, 153, 255, 0.2)" />
@@ -843,12 +843,12 @@ export function OverviewOrderBookDepthChart({
         <svg viewBox={`0 0 ${width} ${height}`} className="depth-chart-svg" aria-hidden="true">
           <defs>
             <linearGradient id={`${gradientId}-bid`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255, 114, 98, 0.28)" />
-              <stop offset="100%" stopColor="rgba(255, 114, 98, 0.03)" />
+              <stop offset="0%" stopColor="rgb(var(--trend-rise-rgb))" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="rgb(var(--trend-rise-rgb))" stopOpacity="0.03" />
             </linearGradient>
             <linearGradient id={`${gradientId}-ask`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(69, 210, 189, 0.3)" />
-              <stop offset="100%" stopColor="rgba(69, 210, 189, 0.03)" />
+              <stop offset="0%" stopColor="rgb(var(--trend-fall-rgb))" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="rgb(var(--trend-fall-rgb))" stopOpacity="0.03" />
             </linearGradient>
           </defs>
 

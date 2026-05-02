@@ -11,6 +11,7 @@ export type GridPreset = {
   readiness: number;
   lowerPrice: number;
   upperPrice: number;
+  defaultRangePercent: number;
   gridCount: number;
   investPerGrid: number;
   support: string;
@@ -33,62 +34,65 @@ export const gridPresets: GridPreset[] = [
   {
     symbol: "BTCUSDT",
     name: "Bitcoin",
-    regime: "震荡偏强",
+    regime: "等待实时校准",
     mode: "压力支撑网格",
-    buyZone: "67,900 - 68,380",
-    trigger: "回踩买墙且量能回落，Taker Buy Ratio > 0.58",
-    priority: "A",
-    readiness: 84,
-    lowerPrice: 66600,
-    upperPrice: 69400,
+    buyZone: "等待 Binance 实时价格校准",
+    trigger: "实时价格接入后，按当前价上下沿自动生成初始网格。",
+    priority: "实时",
+    readiness: 0,
+    lowerPrice: 0,
+    upperPrice: 0,
+    defaultRangePercent: 4.2,
     gridCount: 12,
     investPerGrid: 150,
-    support: "$67,980 订单簿承接",
-    resistance: "$69,180 短线抛压",
-    fundingRate: "-0.011%",
-    volatilityHint: "ATR 回落，适合做中密度网格",
-    winRate: 72,
-    note: "BTC 中枢清晰，适合用支撑/压力边界布网格。"
+    support: "等待实时区间下沿",
+    resistance: "等待实时区间上沿",
+    fundingRate: "等待 Binance Futures",
+    volatilityHint: "等待真实行情后按当前价自动校准区间",
+    winRate: 0,
+    note: "BTC 模板只保留格数和资金参数；价格区间必须由实时行情或用户手动输入。"
   },
   {
     symbol: "ETHUSDT",
     name: "Ethereum",
-    regime: "高位回踩",
+    regime: "等待实时校准",
     mode: "对称网格",
-    buyZone: "3,188 - 3,228",
-    trigger: "4H 布林中轨企稳且 BTC 未失守关键位",
-    priority: "A-",
-    readiness: 76,
-    lowerPrice: 3140,
-    upperPrice: 3335,
+    buyZone: "等待 Binance 实时价格校准",
+    trigger: "实时价格接入后，按当前价上下沿自动生成初始网格。",
+    priority: "实时",
+    readiness: 0,
+    lowerPrice: 0,
+    upperPrice: 0,
+    defaultRangePercent: 5.0,
     gridCount: 10,
     investPerGrid: 120,
-    support: "$3,210 中轨支撑",
-    resistance: "$3,290 卖压回补区",
-    fundingRate: "+0.024%",
-    volatilityHint: "波动适中，但更依赖 BTC 方向",
-    winRate: 66,
-    note: "ETH 适合对称布网，但要控制网格间距别太密。"
+    support: "等待实时区间下沿",
+    resistance: "等待实时区间上沿",
+    fundingRate: "等待 Binance Futures",
+    volatilityHint: "等待真实行情后按当前价自动校准区间",
+    winRate: 0,
+    note: "ETH 模板只保留格数和资金参数；价格区间必须由实时行情或用户手动输入。"
   },
   {
     symbol: "BNBUSDT",
     name: "BNB",
-    regime: "箱体整理",
+    regime: "等待实时校准",
     mode: "动态网格",
-    buyZone: "596 - 603",
-    trigger: "箱体下沿企稳且链上净流出继续放大",
-    priority: "B+",
-    readiness: 71,
-    lowerPrice: 588,
-    upperPrice: 618,
+    buyZone: "等待 Binance 实时价格校准",
+    trigger: "实时价格接入后，按当前价上下沿自动生成初始网格。",
+    priority: "实时",
+    readiness: 0,
+    lowerPrice: 0,
+    upperPrice: 0,
+    defaultRangePercent: 5.2,
     gridCount: 9,
     investPerGrid: 90,
-    support: "$598 护盘墙",
-    resistance: "$610 - $612 供应带",
-    fundingRate: "+0.009%",
-    volatilityHint: "更适合小区间动态跟随，不宜重仓",
-    winRate: 61,
-    note: "BNB 更适合轻仓动态网格，收益稳但突破要及时停机。"
+    support: "等待实时区间下沿",
+    resistance: "等待实时区间上沿",
+    fundingRate: "等待 Binance Futures",
+    volatilityHint: "等待真实行情后按当前价自动校准区间",
+    winRate: 0,
+    note: "BNB 模板只保留格数和资金参数；价格区间必须由实时行情或用户手动输入。"
   }
 ];
 
@@ -100,7 +104,7 @@ export const gridChecklist = [
 ];
 
 export const gridBestPractices = [
-  "先用模拟交易模式跑通一轮，再考虑接入真实 WebSocket 与下单接口。",
+  "先用纸交易演练模式跑通一轮，再考虑接入真实 WebSocket 与下单接口。",
   "网格数量增加会提升成交频率，但也会提高手续费与噪音成本。",
   "突破区间后要及时停机，别把震荡策略硬扛成趋势死扛。",
   "保存策略快照很重要，刷新页面后至少要保留配置、持仓和最近成交记录。"
@@ -125,7 +129,7 @@ export const gridMethodCards: GridMethodCard[] = [
     id: "state-snapshot",
     title: "本地快照",
     emphasis: "配置与订单历史都要保留。",
-    description: "页面刷新后恢复策略配置、已开仓格子和最近执行记录，符合 PRD 的快照思路。",
+    description: "页面刷新后恢复策略配置、已开仓格子和最近执行记录，方便连续跟踪。",
     tone: "cool"
   }
 ];

@@ -171,7 +171,7 @@ export function HkFundDetailPage() {
       ? `${marketDataSource === "cache" ? "缓存行情" : "实时行情"} ${formatMarketUpdatedAt(marketUpdatedAt)}`
       : marketDataStatus === "loading"
         ? "真实行情加载中"
-        : "本地降级数据";
+        : "等待真实行情基线";
 
   return (
     <div className="page-content ashare-detail-page">
@@ -330,10 +330,10 @@ export function HkFundDetailPage() {
           </article>
           <article>
             <span>行情来源</span>
-            <strong>{fund.market?.source === "cache" ? "缓存真实行情" : fund.market?.source === "live" ? "实时行情" : "本地降级"}</strong>
+            <strong>{fund.market?.source === "cache" ? "缓存真实行情" : fund.market?.source === "live" ? "实时行情" : "等待真实行情"}</strong>
           </article>
           <article>
-            <span>K线样本</span>
+            <span>K线数量</span>
             <strong>{fund.market?.sampleCount ? `${fund.market.sampleCount} 条` : "--"}</strong>
           </article>
         </div>

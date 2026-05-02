@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { type MarketOverview, type SignalHistoryItem } from "../data/mockData";
+import { type MarketOverview, type SignalHistoryItem } from "../data/marketOverviewData";
 import {
   connectBinanceMarketStream,
   fetchHistoricalClosePrice,
@@ -106,7 +106,7 @@ export function useLiveMarketOverview(symbol: string): MarketLiveState {
         return "Binance 公共行情暂不可用，当前继续展示本地最近一次有效快照。";
       }
 
-      return "Binance 公共行情暂不可用，当前仅展示中性基线，不再回退本地 mock 数据。";
+      return "Binance 公共行情暂不可用，当前仅展示中性基线，不再回退本地假数据。";
     };
 
     const persistSignalHistory = async (

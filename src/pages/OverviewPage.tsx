@@ -10,12 +10,13 @@ import { StatCard } from "../components/StatCard";
 import { useLiveMarketOverview } from "../hooks/useLiveMarketOverview";
 import { gridPresets, type GridSymbol } from "../data/gridStrategyData";
 import {
+  marketSymbolConfigs,
+  marketSymbolKeys,
   type MarketDimension,
   type RealtimeCanvasInterval,
   type SignalHistoryItem,
-  type Sentiment,
-  signalUniverse
-} from "../data/mockData";
+  type Sentiment
+} from "../data/marketOverviewData";
 import { whaleSymbols, type WhaleSymbol } from "../data/whaleTrackerData";
 import { getBaselineOverview } from "../services/binance";
 import {
@@ -60,7 +61,7 @@ type HistoryPnlFilter = "all" | "gt2" | "0to2" | "neg2to0" | "ltNeg2";
 type HistoryMarketPnlFilter = HistoryPnlFilter;
 type ManualContextFormState = Omit<StoredManualContext, "symbol" | "updatedAt">;
 type ManualContextField = keyof ManualContextFormState;
-type OverviewSymbol = keyof typeof signalUniverse;
+type OverviewSymbol = keyof typeof marketSymbolConfigs;
 type OverviewRouteSeed = {
   symbol: OverviewSymbol;
   note: string | null;
@@ -80,7 +81,7 @@ type StrategyPlaybook = {
   search: string;
 };
 
-const symbolKeys = Object.keys(signalUniverse) as OverviewSymbol[];
+const symbolKeys = marketSymbolKeys as OverviewSymbol[];
 const MAX_HISTORY_ITEMS = symbolKeys.length * 48;
 const HISTORY_RANGE_MS: Record<Exclude<HistoryTimeRange, "all">, number> = {
   "24h": 24 * 60 * 60 * 1000,
@@ -907,19 +908,15 @@ export function OverviewPage() {
     const whaleRouteSymbol = isWhaleSymbol(routeSymbol) ? routeSymbol : "BTCUSDT";
     const gridRouteSymbol = isGridSymbol(routeSymbol) ? routeSymbol : gridPresets[0].symbol;
     const gridPreset = gridPresetMap.get(gridRouteSymbol) ?? gridPresets[0];
-    const gridCenterPrice = (gridPreset.lowerPrice + gridPreset.upperPrice) / 2;
-    const lowerGapRatio =
-      (gridCenterPrice - gridPreset.lowerPrice) / Math.max(gridCenterPrice, 1);
-    const upperGapRatio =
-      (gridPreset.upperPrice - gridCenterPrice) / Math.max(gridCenterPrice, 1);
+    const templateHalfRangeRatio = gridPreset.defaultRangePercent / 200;
     const rangePaddingRatio = Math.max(volatilityRangePercent / 100 / 3, 0.006);
     const gridLowerPrice = Number(
-      (displayMarket.price * (1 - lowerGapRatio - rangePaddingRatio)).toFixed(
+      (displayMarket.price * (1 - templateHalfRangeRatio - rangePaddingRatio)).toFixed(
         gridRouteSymbol === "BNBUSDT" ? 2 : 2
       )
     );
     const gridUpperPrice = Number(
-      (displayMarket.price * (1 + upperGapRatio + rangePaddingRatio)).toFixed(
+      (displayMarket.price * (1 + templateHalfRangeRatio + rangePaddingRatio)).toFixed(
         gridRouteSymbol === "BNBUSDT" ? 2 : 2
       )
     );
@@ -973,7 +970,7 @@ export function OverviewPage() {
       gridCount: String(gridPreset.gridCount),
       investPerGrid: String(gridPreset.investPerGrid),
       currentPrice: displayMarket.price.toFixed(2),
-      note: `已从综合信号盘带入 ${gridRouteSymbol} 当前价格附近的推荐网格区间。`
+      note: `已从综合信号盘基于 Binance 当前价生成 ${gridRouteSymbol} 网格区间。`
     }).toString();
 
     const playbooks: StrategyPlaybook[] = [
@@ -1362,20 +1359,13 @@ export function OverviewPage() {
   }, [alertRules, market.price]);
 
   return (
-    <section className="page-content overview-page">
+    <section className="page-content overview-page crypto-market-theme">
       <div className="hero-panel overview-hero-panel">
         <div>
-          <p className="eyebrow">CR_1 MVP / Composite Signal Desk</p>
-          <h3>CryptoVision 智能信号决策终端</h3>
-          <p className="hero-copy">
-            当前版本已按 CR_1.MD 落地纯前端 MVP：支持 BTC / ETH 切换、10 维信号矩阵、
-            权重调节、雷达图、历史回溯、订单簿实时深度图、链上 / 宏观手动填充与操作栏，
-            并接入 Web Worker 全量重算、Binance REST / WebSocket 行情与 IndexedDB 持久化。
-          </p>
 
           <div className="symbol-switch" role="tablist" aria-label="币种切换">
             {symbolKeys.map((symbol) => {
-              const item = signalUniverse[symbol];
+              const item = marketSymbolConfigs[symbol];
               return (
                 <button
                   key={symbol}
@@ -1480,7 +1470,7 @@ export function OverviewPage() {
           <SectionHeader
             eyebrow="Signal Board"
             title="综合信号盘"
-            description="根据启用维度与用户权重实时重算，贴近 PRD 中的主信号盘设计。"
+            description="根据启用维度与用户权重实时重算，集中展示当前主信号和执行倾向。"
           />
 
           <div className={`signal-board tone-${signalState.tone}`}>
@@ -1699,7 +1689,7 @@ export function OverviewPage() {
         <SectionHeader
           eyebrow="Dimension Matrix"
           title="十大分析维度卡片"
-          description="点击卡片即可查看当前子指标原始值与解释，模拟 PRD 中的详情弹出逻辑。"
+          description="点击卡片即可查看当前子指标原始值、解释和数据来源。"
         />
 
         <div className="dimension-grid">
@@ -1911,7 +1901,7 @@ export function OverviewPage() {
         <SectionHeader
           eyebrow="Context Studio"
           title="链上 / 宏观手动填充"
-          description="按 CR_1.MD 的 P2 方案补齐用户填充能力：留空时保留当前结果或中性基线，填写后即时修正链上与宏观维度。"
+          description="支持用户补充链上与宏观上下文：留空时保留当前结果或中性基线，填写后即时修正维度判断。"
         />
 
         <div className="context-grid">
@@ -2068,7 +2058,7 @@ export function OverviewPage() {
 
         <div className="stats-grid history-stats-grid">
           <StatCard
-            label="筛选后样本"
+            label="筛选后记录"
             value={`${historyStats.total}`}
             detail={`正确 ${historyStats.correctCount} / 失误 ${historyStats.incorrectCount}`}
             trend="neutral"
@@ -2261,7 +2251,7 @@ export function OverviewPage() {
         <SectionHeader
           eyebrow="Strategy Router"
           title="底部策略判断区"
-          description="把综合偏向、盘口失衡、波动和样本表现压成一个执行结论：此刻更适合用哪种策略。"
+          description="把综合偏向、盘口失衡、波动和历史表现压成一个执行结论：此刻更适合用哪种策略。"
         />
 
         <div className={`strategy-router-hero strategy-router-${leadStrategy.tone}`}>

@@ -1,12 +1,13 @@
 import {
+  baselineDimensionTemplates,
+  marketSymbolConfigs,
   type MarketDimension,
   type MarketOverview,
   type OrderBookDepth,
   type RealtimeCanvasData,
   type RealtimeCanvasInterval,
-  type RealtimeCanvasSnapshot,
-  signalUniverse
-} from "../data/mockData";
+  type RealtimeCanvasSnapshot
+} from "../data/marketOverviewData";
 
 export type BinanceKline = [
   number,
@@ -141,20 +142,20 @@ export type ManualContextMetrics = {
   fearGreedIndex: number | null;
 };
 
-function getOverviewTemplate(symbol: string): MarketOverview {
-  return signalUniverse[symbol] ?? Object.values(signalUniverse)[0];
+function getMarketSymbolConfig(symbol: string) {
+  return marketSymbolConfigs[symbol as keyof typeof marketSymbolConfigs] ?? marketSymbolConfigs.BTCUSDT;
 }
 
 export function cloneOverview(symbol: string): MarketOverview {
-  return JSON.parse(JSON.stringify(getOverviewTemplate(symbol))) as MarketOverview;
+  return JSON.parse(JSON.stringify(createBaselineOverview(symbol))) as MarketOverview;
 }
 
 export function createBaselineOverview(symbol: string): MarketOverview {
-  const template = getOverviewTemplate(symbol);
+  const config = getMarketSymbolConfig(symbol);
 
   return {
     symbol,
-    displayName: template.displayName,
+    displayName: config.displayName,
     price: 0,
     change24h: 0,
     fundingRate: "--",
@@ -162,7 +163,7 @@ export function createBaselineOverview(symbol: string): MarketOverview {
     openInterest: "等待 Binance 衍生品数据",
     validity: "等待实时行情恢复",
     riskNote:
-      "当前尚未拿到 Binance 公共行情，页面只保留中性基线与本地手动上下文，不展示伪造价格结论。",
+      "当前尚未拿到 Binance 公共行情，页面只保留中性基线与本地手动上下文，不生成价格方向结论。",
     support: "等待买方深度恢复",
     resistance: "等待卖方深度恢复",
     defaultAlertPrice: 0,
@@ -170,31 +171,14 @@ export function createBaselineOverview(symbol: string): MarketOverview {
     realtimeCanvas: null,
     orderBookDepth: null,
     reportHighlights: [
-      "当前尚未拿到 Binance 公共行情，因此不再回退到本地 mock 价格。",
+      "当前尚未拿到 Binance 公共行情，因此不再回退到本地假价格。",
       "REST 或 WebSocket 恢复后，趋势、动量、量能与订单簿维度会自动重算。",
       "链上 / 宏观维度仍可通过手动填充做辅助修正。"
     ],
-    dimensions: template.dimensions.map((dimension) => {
-      const supportsManualContext = dimension.id === "on-chain" || dimension.id === "macro";
-
-      return {
-        ...dimension,
-        score: 0,
-        sentiment: "neutral",
-        signal: supportsManualContext ? "等待手动填充 / 实时补充" : "等待实时数据",
-        summary: supportsManualContext
-          ? "当前暂无可靠自动数据源，可先手动填充后参与综合判断。"
-          : "当前尚未获取该维度的 Binance 实时结论。",
-        note: supportsManualContext
-          ? "当前为中性基线；录入手动上下文后会立即重算该维度。"
-          : "当前为中性基线；实时行情恢复后会自动重算。",
-        details: dimension.details.map((detail) => ({
-          label: detail.label,
-          value: "--",
-          insight: supportsManualContext ? "可通过手动填充修正" : "等待 Binance 公共行情"
-        }))
-      };
-    }),
+    dimensions: baselineDimensionTemplates.map((dimension) => ({
+      ...dimension,
+      details: dimension.details.map((detail) => ({ ...detail }))
+    })),
     history: []
   };
 }

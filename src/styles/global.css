@@ -1787,6 +1787,17 @@ th {
   gap: 1.25rem;
 }
 
+.crypto-market-theme {
+  --trend-rise: #45d2bd;
+  --trend-rise-rgb: 69, 210, 189;
+  --trend-rise-soft: #dffcf7;
+  --trend-rise-strong: #8ff1e2;
+  --trend-fall: #ff7262;
+  --trend-fall-rgb: 255, 114, 98;
+  --trend-fall-soft: #ffd7d1;
+  --trend-fall-strong: #ffb9b0;
+}
+
 .hero-panel {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.6fr);
@@ -2056,6 +2067,36 @@ th {
   background:
     linear-gradient(180deg, rgba(25, 28, 36, 0.96), rgba(15, 18, 26, 0.92)),
     radial-gradient(circle at top right, rgba(255, 159, 90, 0.2), transparent 42%);
+}
+
+.crypto-market-theme .tone-bullish {
+  background:
+    linear-gradient(180deg, rgba(14, 45, 39, 0.96), rgba(8, 24, 22, 0.92)),
+    radial-gradient(circle at top right, rgba(var(--trend-rise-rgb), 0.24), transparent 42%);
+}
+
+.crypto-market-theme .tone-bearish {
+  background:
+    linear-gradient(180deg, rgba(58, 22, 22, 0.96), rgba(25, 10, 13, 0.92)),
+    radial-gradient(circle at top right, rgba(var(--trend-fall-rgb), 0.24), transparent 42%);
+}
+
+.crypto-market-theme .stat-up {
+  background: linear-gradient(180deg, rgba(14, 45, 39, 0.92), rgba(8, 24, 22, 0.92));
+}
+
+.crypto-market-theme .stat-down {
+  background: linear-gradient(180deg, rgba(58, 22, 22, 0.92), rgba(25, 10, 13, 0.92));
+}
+
+.crypto-market-theme .grid-history-buy,
+.crypto-market-theme .whale-history-bullish {
+  background: linear-gradient(180deg, rgba(14, 45, 39, 0.5), rgba(255, 255, 255, 0.03));
+}
+
+.crypto-market-theme .grid-history-sell,
+.crypto-market-theme .whale-history-bearish {
+  background: linear-gradient(180deg, rgba(58, 22, 22, 0.5), rgba(255, 255, 255, 0.03));
 }
 
 .symbol-switch {
@@ -2451,7 +2492,8 @@ th {
 
 .sparkline {
   width: 100%;
-  height: 280px;
+  height: auto;
+  display: block;
 }
 
 .sparkline-grid-line {
@@ -2643,7 +2685,7 @@ th {
 }
 
 .realtime-canvas-svg {
-  height: 428px;
+  aspect-ratio: 960 / 428;
 }
 
 .realtime-canvas-empty {
@@ -2957,7 +2999,7 @@ th {
   }
 
   .realtime-canvas-svg {
-    height: 364px;
+    aspect-ratio: 960 / 428;
   }
 
   .chart-summary-strip.chart-summary-strip-canvas {
@@ -3042,7 +3084,8 @@ th {
 
 .depth-chart-svg {
   width: 100%;
-  height: 220px;
+  height: auto;
+  aspect-ratio: 340 / 180;
   display: block;
 }
 
@@ -3161,6 +3204,8 @@ th {
 
 .radar-chart {
   width: min(100%, 380px);
+  height: auto;
+  aspect-ratio: 1;
   overflow: visible;
 }
 
@@ -3886,7 +3931,9 @@ th {
 
 .grid-chart-svg {
   width: 100%;
-  height: 320px;
+  height: auto;
+  aspect-ratio: 720 / 320;
+  display: block;
   margin-top: 0.95rem;
   overflow: visible;
 }
@@ -3935,7 +3982,7 @@ th {
 
 .grid-chart-label {
   fill: rgba(255, 240, 223, 0.8);
-  font-size: 3px;
+  font-size: 11px;
   text-anchor: end;
 }
 
@@ -4791,7 +4838,9 @@ th {
 
 .fund-trend-sparkline {
   width: 100%;
-  height: 76px;
+  height: auto;
+  aspect-ratio: 180 / 76;
+  display: block;
   margin-top: 0.45rem;
   overflow: visible;
 }
@@ -4845,7 +4894,9 @@ th {
 
 .fund-technical-chart svg {
   width: 100%;
-  height: 156px;
+  height: auto;
+  aspect-ratio: 360 / 156;
+  display: block;
   overflow: visible;
 }
 
@@ -4999,8 +5050,9 @@ th {
 
 .fund-detail-chart svg {
   width: 100%;
-  height: min(62vh, 560px);
-  min-height: 420px;
+  height: auto;
+  aspect-ratio: 960 / 520;
+  display: block;
   overflow: visible;
 }
 
@@ -5655,10 +5707,6 @@ th {
 
   .ashare-signal-focus-next {
     grid-column: auto;
-  }
-
-  .fund-detail-chart svg {
-    min-height: 340px;
   }
 
   .strategy-context-actions {

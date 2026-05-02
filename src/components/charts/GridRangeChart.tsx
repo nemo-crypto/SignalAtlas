@@ -68,7 +68,7 @@ export function GridRangeChart({
   const chartMax = Math.max(upperPrice + spacing * 1.6, ...priceTrail);
   const chartRange = Math.max(chartMax - chartMin, spacing * 2, 1);
   const chartHeight = 320;
-  const chartWidth = 100;
+  const chartWidth = 720;
   const priceDelta = currentPrice - priceTrail[Math.max(priceTrail.length - 2, 0)];
   const priceDeltaLabel = `${priceDelta >= 0 ? "+" : ""}${priceDelta.toFixed(2)}`;
   const openBuyLevels = new Set(openSlots.map((slotIndex) => levels[slotIndex]));
@@ -124,7 +124,7 @@ export function GridRangeChart({
         </article>
       </div>
 
-      <svg className="grid-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" aria-hidden="true">
+      <svg className="grid-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <defs>
           <linearGradient id="grid-range-band" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(106, 153, 255, 0.28)" />
@@ -149,7 +149,7 @@ export function GridRangeChart({
         {levels.map((level) => (
           <g key={level}>
             <line x1="0" x2={chartWidth} y1={mapY(level)} y2={mapY(level)} className="grid-chart-level-line" />
-            <text x={chartWidth - 2} y={mapY(level) - 1.8} className="grid-chart-label">
+            <text x={chartWidth - 14} y={mapY(level) - 5} className="grid-chart-label">
               {formatAxisPrice(level, symbol)}
             </text>
           </g>
@@ -160,13 +160,13 @@ export function GridRangeChart({
         <polygon points={trailFill} className="grid-chart-trail-fill" fill="url(#grid-trail-fill)" />
         <polyline points={trailPolyline} className="grid-chart-trail" />
         <line x1="0" x2={chartWidth} y1={currentY} y2={currentY} className="grid-chart-price-line" />
-        <circle cx={chartWidth - 4} cy={currentY} r="2.8" className="grid-chart-price-dot" />
+        <circle cx={chartWidth - 24} cy={currentY} r="5.5" className="grid-chart-price-dot" />
 
         {Array.from(openBuyLevels).map((level) => (
-          <circle key={`buy-${level}`} cx="14" cy={mapY(level)} r="3.2" className="grid-chart-buy-dot" />
+          <circle key={`buy-${level}`} cx="64" cy={mapY(level)} r="5.5" className="grid-chart-buy-dot" />
         ))}
         {Array.from(openSellTargets).map((level) => (
-          <circle key={`sell-${level}`} cx="86" cy={mapY(level)} r="3.2" className="grid-chart-sell-dot" />
+          <circle key={`sell-${level}`} cx={chartWidth - 64} cy={mapY(level)} r="5.5" className="grid-chart-sell-dot" />
         ))}
       </svg>
 

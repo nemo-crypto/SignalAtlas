@@ -155,7 +155,7 @@ export function AShareFundDetailPage() {
       ? `${marketDataSource === "cache" ? "缓存行情" : "实时行情"} ${formatMarketUpdatedAt(marketUpdatedAt)}`
       : marketDataStatus === "loading"
         ? "真实行情加载中"
-        : "本地降级数据";
+        : "等待真实行情基线";
 
   return (
     <div className="page-content ashare-detail-page">
