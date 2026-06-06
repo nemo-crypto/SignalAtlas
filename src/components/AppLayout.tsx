@@ -6,8 +6,9 @@ const navItems = [
   { to: "/", label: "BTC", short: "01" },
   { to: "/whale-tracker", label: "聪明钱", short: "02" },
   { to: "/grid-signals", label: "网格", short: "03" },
-  { to: "/a-share-sector-funds", label: "A股基金", short: "04" },
-  { to: "/hk-sector-funds", label: "港股基金", short: "05" }
+  { to: "/event-prediction", label: "预测", short: "04" },
+  { to: "/a-share-sector-funds", label: "A股基金", short: "05" },
+  { to: "/hk-sector-funds", label: "港股基金", short: "06" }
 ];
 
 export function AppLayout() {

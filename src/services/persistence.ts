@@ -1,7 +1,7 @@
 import { type MarketOverview, type SignalHistoryItem } from "../data/marketOverviewData";
 
 const DB_NAME = "cryptoquant-live";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const SNAPSHOT_STORE = "snapshots";
 const GRID_SNAPSHOT_STORE = "grid-snapshots";
 const WHALE_OBSERVATION_STORE = "whale-observations";
@@ -10,6 +10,8 @@ const ALERT_STORE = "alerts";
 const ALERT_RULE_STORE = "alert-rules";
 const ALERT_EVENT_STORE = "alert-events";
 const MANUAL_CONTEXT_STORE = "manual-context";
+const EVENT_CANDLE_STORE = "event-candles";
+const EVENT_PREDICTION_STORE = "event-predictions";
 const MAX_SIGNAL_HISTORY_PER_SYMBOL = 48;
 const MAX_WHALE_OBSERVATIONS_PER_SYMBOL = 18;
 const MAX_ALERT_EVENTS_PER_SYMBOL = 24;
@@ -84,6 +86,62 @@ export type StoredGridSnapshot<TConfig = unknown, TRuntime = unknown> = {
   config: TConfig;
   runtime: TRuntime;
   savedAt: number;
+};
+
+export type StoredEventCandle = {
+  id: string;
+  symbol: string;
+  openTime: number;
+  closeTime: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  takerBuyBaseVolume?: number;
+  takerBuyQuoteVolume?: number;
+  tradeCount?: number;
+  storedAt: number;
+};
+
+export type StoredEventPrediction = {
+  id: string;
+  symbol: string;
+  horizonMinutes: number;
+  recordedAt: number;
+  expiryAt: number;
+  basePrice: number;
+  direction: "UP" | "DOWN" | "WAIT";
+  probability: number;
+  threshold: number;
+  score: number;
+  edge: number;
+  actionable: boolean;
+  mode: "high-probability" | "every-minute";
+  stake: number;
+  payoutRatio: number;
+  status: "pending" | "won" | "lost" | "flat";
+  settledPrice?: number;
+  resolvedAt?: number;
+  pnl?: number;
+  correct?: boolean;
+  reasons: string[];
+  warnings: string[];
+  strategyVersion: string;
+};
+
+export type EventCandleQuery = {
+  symbol: string;
+  since?: number;
+  until?: number;
+  limit?: number;
+};
+
+export type EventPredictionQuery = {
+  symbol?: string;
+  status?: StoredEventPrediction["status"];
+  since?: number;
+  limit?: number;
 };
 
 export type StoredWhaleObservationEntry = {
@@ -172,6 +230,18 @@ function openDatabase(): Promise<IDBDatabase> {
 
       if (!database.objectStoreNames.contains(MANUAL_CONTEXT_STORE)) {
         database.createObjectStore(MANUAL_CONTEXT_STORE, { keyPath: "symbol" });
+      }
+
+      if (!database.objectStoreNames.contains(EVENT_CANDLE_STORE)) {
+        const store = database.createObjectStore(EVENT_CANDLE_STORE, { keyPath: "id" });
+        store.createIndex("by_symbol_openTime", ["symbol", "openTime"], { unique: false });
+        store.createIndex("by_symbol_closeTime", ["symbol", "closeTime"], { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains(EVENT_PREDICTION_STORE)) {
+        const store = database.createObjectStore(EVENT_PREDICTION_STORE, { keyPath: "id" });
+        store.createIndex("by_symbol_recordedAt", ["symbol", "recordedAt"], { unique: false });
+        store.createIndex("by_status_expiryAt", ["status", "expiryAt"], { unique: false });
       }
     };
 
@@ -732,5 +802,138 @@ export function loadScopedSignalHistory(query: SignalHistoryQuery): Promise<Sign
   return runTransaction(SIGNAL_HISTORY_STORE, "readonly", async (store) => {
     const entries = await querySignalHistoryEntries(store, query);
     return entries.map(mapSignalHistoryItem);
+  });
+}
+
+async function queryEventCandles(
+  store: IDBObjectStore,
+  query: EventCandleQuery
+): Promise<StoredEventCandle[]> {
+  const since = query.since ?? 0;
+  const until = query.until ?? Number.MAX_SAFE_INTEGER;
+  const index = store.index("by_symbol_openTime");
+  const entries = await promisifyRequest(
+    index.getAll(IDBKeyRange.bound([query.symbol, since], [query.symbol, until]))
+  );
+  const sorted = entries.sort((left, right) => left.openTime - right.openTime);
+
+  return typeof query.limit === "number" ? sorted.slice(-query.limit) : sorted;
+}
+
+async function queryEventPredictions(
+  store: IDBObjectStore,
+  query: EventPredictionQuery = {}
+): Promise<StoredEventPrediction[]> {
+  const entries = query.symbol
+    ? await promisifyRequest(
+        store
+          .index("by_symbol_recordedAt")
+          .getAll(IDBKeyRange.bound([query.symbol, 0], [query.symbol, Number.MAX_SAFE_INTEGER]))
+      )
+    : await promisifyRequest(store.getAll());
+  const since = typeof query.since === "number" ? query.since : null;
+
+  return entries
+    .filter((entry) => (query.status ? entry.status === query.status : true))
+    .filter((entry) => (since === null ? true : entry.recordedAt >= since))
+    .sort((left, right) => right.recordedAt - left.recordedAt)
+    .slice(0, query.limit ?? entries.length);
+}
+
+export function saveEventCandles(candles: StoredEventCandle[]): Promise<number> {
+  if (candles.length === 0) {
+    return Promise.resolve(0);
+  }
+
+  return runTransaction(EVENT_CANDLE_STORE, "readwrite", async (store) => {
+    const uniqueCandles = new Map(candles.map((item) => [item.id, item]));
+
+    for (const candle of uniqueCandles.values()) {
+      await promisifyRequest(store.put(candle));
+    }
+
+    return uniqueCandles.size;
+  });
+}
+
+export function loadEventCandles(query: EventCandleQuery): Promise<StoredEventCandle[]> {
+  return runTransaction(EVENT_CANDLE_STORE, "readonly", async (store) => {
+    return queryEventCandles(store, query);
+  });
+}
+
+export function loadLatestEventCandles(symbol: string, limit = 2880): Promise<StoredEventCandle[]> {
+  return runTransaction(EVENT_CANDLE_STORE, "readonly", async (store) => {
+    return queryEventCandles(store, { symbol, limit });
+  });
+}
+
+export function getEventCandleCoverage(symbol: string): Promise<{ startAt: number | null; endAt: number | null; count: number }> {
+  return runTransaction(EVENT_CANDLE_STORE, "readonly", async (store) => {
+    const entries = await queryEventCandles(store, { symbol });
+
+    return {
+      startAt: entries[0]?.openTime ?? null,
+      endAt: entries[entries.length - 1]?.closeTime ?? null,
+      count: entries.length
+    };
+  });
+}
+
+export function appendEventPrediction(prediction: StoredEventPrediction): Promise<boolean> {
+  return runTransaction(EVENT_PREDICTION_STORE, "readwrite", async (store) => {
+    const existing = await promisifyRequest(store.get(prediction.id));
+    if (existing) {
+      return false;
+    }
+
+    await promisifyRequest(store.put(prediction));
+    return true;
+  });
+}
+
+export function loadEventPredictions(query: EventPredictionQuery = {}): Promise<StoredEventPrediction[]> {
+  return runTransaction(EVENT_PREDICTION_STORE, "readonly", async (store) => {
+    return queryEventPredictions(store, query);
+  });
+}
+
+export function loadPendingEventPredictions(now = Date.now()): Promise<StoredEventPrediction[]> {
+  return runTransaction(EVENT_PREDICTION_STORE, "readonly", async (store) => {
+    const index = store.index("by_status_expiryAt");
+    const entries = await promisifyRequest(
+      index.getAll(IDBKeyRange.bound(["pending", 0], ["pending", now]))
+    );
+
+    return entries.sort((left, right) => left.expiryAt - right.expiryAt);
+  });
+}
+
+export function resolveEventPredictions(
+  resolutions: Array<Pick<StoredEventPrediction, "id" | "status" | "settledPrice" | "resolvedAt" | "pnl" | "correct">>
+): Promise<number> {
+  if (resolutions.length === 0) {
+    return Promise.resolve(0);
+  }
+
+  return runTransaction(EVENT_PREDICTION_STORE, "readwrite", async (store) => {
+    let updatedCount = 0;
+
+    for (const resolution of resolutions) {
+      const currentEntry = await promisifyRequest(store.get(resolution.id));
+      if (!currentEntry || currentEntry.status !== "pending") {
+        continue;
+      }
+
+      await promisifyRequest(
+        store.put({
+          ...currentEntry,
+          ...resolution
+        })
+      );
+      updatedCount += 1;
+    }
+
+    return updatedCount;
   });
 }
