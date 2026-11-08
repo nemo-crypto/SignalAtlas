@@ -1,6 +1,6 @@
 # Signal Atlas
 
-Signal Atlas 是一个面向加密行情研判与策略执行演练的前端工作台。它把「综合信号总览」「大额成交监控」「震荡市网格策略」整合到同一套界面中，尽量把价格、盘口、资金流、策略建议与本地观察记录放在连续的决策链路里。
+Signal Atlas 是一个面向加密行情研判与策略执行演练的前端工作台。它把行情总览、大额成交、网格策略、事件预测以及A股/港股基金分析整合到同一套界面中，尽量把价格、盘口、资金流、策略建议与本地观察记录放在连续的决策链路里。
 
 当前版本使用 React + TypeScript + Vite 构建，以 Binance 公共 REST / WebSocket 行情作为实时输入，通过 Web Worker 做分析重算，并用 IndexedDB 持久化快照、告警与策略配置。
 
@@ -181,7 +181,7 @@ npm run preview
 │   ├── components/         # 布局、卡片与图表组件
 │   ├── data/               # mock / preset / 配置数据
 │   ├── hooks/              # 实时行情与页面状态 hooks
-│   ├── pages/              # 三个主页面
+│   ├── pages/              # 行情、事件与A股/港股基金页面
 │   ├── services/           # Binance 接入、分析与持久化服务
 │   ├── workers/            # Web Worker 分析线程
 │   └── styles/             # 全局样式
@@ -201,3 +201,19 @@ npm run preview
 - 增加更完整的策略回测与导出能力
 - 增加用户级配置同步、远端存储与协作标注
 - 增加移动端适配与多屏工作台模式
+
+<!-- BEGIN chovy-readme-review -->
+## 当前路由与数据接入核对
+
+原有截图重点展示行情总览、大额成交和网格，当前 [src/App.tsx](src/App.tsx) 还注册了以下页面：
+
+| 路由 | 业务入口 | 代码 |
+|---|---|---|
+| `/event-prediction` | 事件信号与回测相关界面 | `src/pages/EventPredictionPage.tsx` |
+| `/ashare-funds`、`/ashare-funds/:code` | A股基金列表与详情 | `src/pages/AShareSectorFundsPage.tsx`、`AShareFundDetailPage.tsx` |
+| `/hk-funds`、`/hk-funds/:code` | 港股基金列表与详情 | `src/pages/HkSectorFundsPage.tsx`、`HkFundDetailPage.tsx` |
+
+A股与港股还保留sector-funds路由别名。市场数据适配分别位于 `src/services/ashareFundMarketData.ts`、`hkFundMarketData.ts`，定义live/cache/fallback来源与partial/error状态；验收时应核实显示的是实时数据、缓存还是降级内容。当前数据范围已不限于Binance。
+
+Vite开发端口配置为5173。package.json仅提供dev、build和preview，没有test/lint脚本；本轮未执行安装、构建或外部行情请求，原文线上地址和历史截图不作为本次联调证明。
+<!-- END chovy-readme-review -->
