@@ -4,6 +4,17 @@ Signal Atlas 是一个面向加密行情研判与策略执行演练的前端工�
 
 当前版本使用 React + TypeScript + Vite 构建，以 Binance 公共 REST / WebSocket 行情作为实时输入，通过 Web Worker 做分析重算，并用 IndexedDB 持久化快照、告警与策略配置。
 
+<!-- BEGIN project-discovery -->
+## 项目定位与实践入口
+
+Crypto market dashboard built with React and TypeScript: Binance WebSocket data, whale tracking, grid paper trading and IndexedDB. 加密行情分析与大额成交监控工作台。
+
+适合从以下入口阅读实现与接入条件：
+
+- [行情接入与分析](src/services/)
+- [前端分析线程](src/workers/)
+<!-- END project-discovery -->
+
 ## 在线体验
 
 - 线上地址：`https://signal-atlas-nemo-fks8uuk33-nemos-projects-42ff2604.vercel.app/`
