@@ -1,5 +1,7 @@
 # Signal Atlas
 
+**[在线体验 · 打开 Signal Atlas 行情工作台](https://signal-atlas-nemo.vercel.app/)**
+
 Signal Atlas 是一个面向加密行情研判与策略执行演练的前端工作台。它把行情总览、大额成交、网格策略、事件预测以及A股/港股基金分析整合到同一套界面中，尽量把价格、盘口、资金流、策略建议与本地观察记录放在连续的决策链路里。
 
 当前版本使用 React + TypeScript + Vite 构建，以 Binance 公共 REST / WebSocket 行情作为实时输入，通过 Web Worker 做分析重算，并用 IndexedDB 持久化快照、告警与策略配置。
@@ -17,7 +19,7 @@ Crypto market dashboard built with React and TypeScript: Binance WebSocket data,
 
 ## 在线体验
 
-- 线上地址：`https://signal-atlas-nemo-fks8uuk33-nemos-projects-42ff2604.vercel.app/`
+- [打开线上工作台](https://signal-atlas-nemo.vercel.app/)
 - 推荐打开后依次体验：
   - 总览页：看综合信号、实时画布和策略路由
   - Whale Tracker：看大额成交、买墙吸收与观察日志
@@ -35,7 +37,7 @@ Crypto market dashboard built with React and TypeScript: Binance WebSocket data,
 
 | 入口 | 说明 |
 | --- | --- |
-| 在线访问 | `https://signal-atlas-nemo-fks8uuk33-nemos-projects-42ff2604.vercel.app/` |
+| 在线访问 | [打开 Signal Atlas](https://signal-atlas-nemo.vercel.app/) |
 | 本地开发 | `npm install` → `npm run dev` |
 | 生产构建 | `npm run build` |
 
