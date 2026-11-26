@@ -44,7 +44,22 @@ export type OpenInterestResponse = {
 
 export type OpenInterestHistItem = {
   sumOpenInterest: string;
+  timestamp: number;
 };
+
+export function summarizeOpenInterestHistory(items: readonly OpenInterestHistItem[] | null | undefined) {
+  const byTime = new Map<number, number>();
+  for (const item of items ?? []) {
+    const value = Number(item.sumOpenInterest);
+    if (Number.isFinite(item.timestamp) && typeof item.sumOpenInterest === "string" && item.sumOpenInterest.trim() !== "" && Number.isFinite(value) && value >= 0) {
+      byTime.set(item.timestamp, value);
+    }
+  }
+  const values = [...byTime.entries()].sort((a, b) => a[0] - b[0]);
+  const current = values[values.length - 1]?.[1] ?? null;
+  const previous = values[values.length - 2]?.[1] ?? null;
+  return { current, changePercent: current !== null && previous !== null && previous > 0 ? ((current - previous) / previous) * 100 : null };
+}
 
 export type LongShortRatioItem = {
   longShortRatio: string;

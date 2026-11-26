@@ -23,6 +23,7 @@ import {
   formatCurrency,
   selectWall,
   toNumber,
+  summarizeOpenInterestHistory,
   type BinanceKline,
   type RawMarketSnapshot
 } from "./marketAnalysis";
@@ -71,12 +72,9 @@ function buildRawSnapshot(args: {
   openInterestHist: OpenInterestHistItem[] | null;
 }): RawMarketSnapshot {
   const openInterestCurrent = toNumber(args.openInterest?.openInterest);
-  const previousOpenInterest = toNumber(args.openInterestHist?.[1]?.sumOpenInterest);
-  const currentOpenInterest = toNumber(args.openInterestHist?.[0]?.sumOpenInterest) || openInterestCurrent;
-  const openInterestChange =
-    previousOpenInterest > 0
-      ? ((currentOpenInterest - previousOpenInterest) / previousOpenInterest) * 100
-      : null;
+  const history = summarizeOpenInterestHistory(args.openInterestHist);
+  const currentOpenInterest = history.current ?? openInterestCurrent;
+  const openInterestChange = history.changePercent;
 
   return {
     symbol: args.symbol,

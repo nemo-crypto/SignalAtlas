@@ -15,7 +15,8 @@ import {
   type OpenInterestHistItem,
   type OpenInterestResponse,
   type PremiumIndexResponse,
-  toNumber
+  toNumber,
+  summarizeOpenInterestHistory
 } from "../services/marketAnalysis";
 
 type RawWhaleTrade = AggregateTrade & {
@@ -464,11 +465,9 @@ async function fetchSymbolContext(symbol: WhaleSymbol, signal: AbortSignal): Pro
   }
 
   const openInterestCurrent = toNumber(openInterest?.openInterest);
-  const historyCurrent = toNumber(openInterestHist?.[0]?.sumOpenInterest);
-  const historyPrevious = toNumber(openInterestHist?.[1]?.sumOpenInterest);
-  const openInterestValue = historyCurrent || openInterestCurrent || null;
-  const openInterestChange =
-    historyPrevious > 0 ? ((Math.max(historyCurrent, openInterestCurrent) - historyPrevious) / historyPrevious) * 100 : null;
+  const history = summarizeOpenInterestHistory(openInterestHist);
+  const openInterestValue = history.current ?? (openInterestCurrent || null);
+  const openInterestChange = history.changePercent;
 
   return buildWhaleContext({
     symbol,
