@@ -51,3 +51,12 @@ test('a delayed cached snapshot cannot replace newer live market data', async t 
     assert.equal(f.current.lastUpdatedAt, timestamp);
   } finally {f.close();}
 });
+
+test('cached snapshots still populate the page when live data is unavailable', async t => {
+  const f = await fixture(t, false);
+  try {
+    await f.release();
+    assert.equal(f.current.overview.price, 100);
+    assert.equal(f.current.connectionState, 'fallback');
+  } finally {f.close();}
+});
