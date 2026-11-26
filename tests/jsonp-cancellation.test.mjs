@@ -27,3 +27,14 @@ test('an already-aborted request rejects before inserting JSONP resources', asyn
   assert.equal(b.scripts.length, 0);
   assert.equal(b.timers.size, 0);
 });
+
+test('cancelling an active JSONP request removes its script and timeout', async t => {
+  const b = browser(t), controller = new AbortController();
+  const result = fetchAshareFundMarketSnapshot(ashareSectorFunds[0].funds[0], controller.signal);
+  const rejection = assert.rejects(result, {name: 'AbortError'});
+  assert.equal(b.scripts.length, 1);
+  controller.abort();
+  await rejection;
+  assert.equal(b.scripts[0].removed, true);
+  assert.equal(b.timers.size, 0);
+});
