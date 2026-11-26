@@ -22,3 +22,12 @@ test('subscribed partial depth snapshots update the visible order book', t => {
   assert.equal(s.current.orderBookDepth.bids[0].price, 100);
   assert.equal(s.current.orderBookDepth.asks[0].price, 101);
 });
+
+test('new partial snapshots replace old price levels rather than accumulating them', t => {
+  const s = stream(t);
+  s.send({lastUpdateId: 160, bids: [['100', '10'], ['99', '5']], asks: [['101', '20']]});
+  s.send({lastUpdateId: 161, bids: [['98', '3']], asks: [['102', '4']]});
+  assert.equal(s.updates, 2);
+  assert.deepEqual(s.current.orderBookDepth.bids.map(level => level.price), [98]);
+  assert.deepEqual(s.current.orderBookDepth.asks.map(level => level.price), [102]);
+});
