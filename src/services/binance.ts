@@ -191,17 +191,9 @@ export async function fetchHistoricalClosePrice(
     return null;
   }
 
-  const matched = klines
-    .map((item) => ({
-      close: toNumber(item[4]),
-      midpoint: (item[0] + item[6]) / 2
-    }))
-    .sort(
-      (left, right) =>
-        Math.abs(left.midpoint - targetTimestamp) - Math.abs(right.midpoint - targetTimestamp)
-    )[0];
-
-  return matched?.close ?? null;
+  const matched = klines.find(item => item[0] <= targetTimestamp && item[6] >= targetTimestamp);
+  const price = matched ? toNumber(matched[4]) : 0;
+  return price > 0 ? price : null;
 }
 
 export function connectBinanceMarketStream(
