@@ -11,3 +11,11 @@ test('open interest growth follows timestamps regardless of response order', asy
   history = [...history].reverse();
   assert.equal((await fetchEventMarketContext('BTCUSDT', new AbortController().signal)).openInterestChangePercent, 10);
 });
+
+test('missing or unusable history never invents a directional change', async () => {
+  const {summarizeOpenInterestHistory} = await loadSource('../../src/services/marketAnalysis.ts');
+  assert.deepEqual(summarizeOpenInterestHistory([]), {current: null, changePercent: null});
+  assert.deepEqual(summarizeOpenInterestHistory([{timestamp: 1, sumOpenInterest: '100'}]), {current: 100, changePercent: null});
+  assert.deepEqual(summarizeOpenInterestHistory([{timestamp: 1, sumOpenInterest: '0'}, {timestamp: 2, sumOpenInterest: '100'}]), {current: 100, changePercent: null});
+  assert.deepEqual(summarizeOpenInterestHistory([{timestamp: 1, sumOpenInterest: '100'}, {timestamp: 2, sumOpenInterest: '0'}, {timestamp: 3, sumOpenInterest: 'bad'}]), {current: 0, changePercent: -100});
+});
