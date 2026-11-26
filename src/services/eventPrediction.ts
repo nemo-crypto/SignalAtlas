@@ -862,7 +862,15 @@ export function buildEventPredictionSignals(args: {
 }
 
 function findSettlementCandle(candles: EventCandle[], targetTime: number, now = Infinity): EventCandle | null {
-  return candles.find(item => item.openTime <= targetTime && item.closeTime >= targetTime && item.closeTime <= now) ?? null;
+  let low = 0;
+  let high = candles.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (candles[middle].openTime <= targetTime) low = middle + 1;
+    else high = middle;
+  }
+  const candle = candles[low - 1];
+  return candle && candle.closeTime >= targetTime && candle.closeTime <= now ? candle : null;
 }
 
 function findFutureCandle(candles: EventCandle[], fromIndex: number, horizonMinutes: number): EventCandle | null {
