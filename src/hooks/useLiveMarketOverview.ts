@@ -375,11 +375,12 @@ export function useLiveMarketOverview(symbol: string): MarketLiveState {
 
           try {
             const after1hPrice =
-              (await fetchHistoricalClosePrice(
+              await fetchHistoricalClosePrice(
                 entry.symbol,
                 entry.recordedAt + SIGNAL_HISTORY_TARGET_DELAY_MS,
                 controller.signal
-              )) ?? latestPrice;
+              );
+            if (after1hPrice === null) return null;
 
             return {
               id: entry.id,
@@ -396,7 +397,7 @@ export function useLiveMarketOverview(symbol: string): MarketLiveState {
         return;
       }
 
-      const updatedCount = await resolveSignalHistoryEntries(resolutions);
+      const updatedCount = await resolveSignalHistoryEntries(resolutions.filter((resolution) => resolution !== null));
       if (ignore || updatedCount === 0) {
         return;
       }
