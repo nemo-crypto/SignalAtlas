@@ -29,3 +29,12 @@ test('malformed frames are ignored without breaking subsequent valid updates', t
   s.send({e: '24hrMiniTicker', c: '0.22', o: '0.2'});
   assert.equal(s.updates, 1);
 });
+
+test('cleanup is repeatable and keeps previously displayed data intact', t => {
+  const s = stream(t);
+  s.send({e: '24hrMiniTicker', c: '0.22', o: '0.2'});
+  s.close(); s.close();
+  s.send({e: '24hrMiniTicker', c: '0.99', o: '0.2'});
+  assert.equal(s.updates, 1);
+  assert.equal(s.current.price, 0.22);
+});
