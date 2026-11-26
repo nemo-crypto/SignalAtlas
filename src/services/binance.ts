@@ -237,11 +237,14 @@ export function connectBinanceMarketStream(
 
       if (message.data.e === "24hrMiniTicker") {
         const data = message.data;
+        const lastPrice = toNumber(data.c);
+        const openPrice = toNumber(data.o);
+        if (lastPrice <= 0) return;
         handlers.onOverview(
           (current) => ({
             ...current,
-            price: toNumber(data.c),
-            change24h: ((toNumber(data.c) - toNumber(data.o)) / Math.max(toNumber(data.o), 1)) * 100
+            price: lastPrice,
+            change24h: openPrice > 0 ? ((lastPrice - openPrice) / openPrice) * 100 : current.change24h
           }),
           now
         );
