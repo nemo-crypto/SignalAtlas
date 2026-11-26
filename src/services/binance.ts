@@ -248,12 +248,9 @@ export function connectBinanceMarketStream(
         return;
       }
 
-      if (message.data.e === "depthUpdate") {
-        const data = message.data;
-        const depth: DepthSnapshot = {
-          bids: data.b,
-          asks: data.a
-        };
+      // depth10 返回完整的前十档快照，不携带增量流的 e/b/a 字段。
+      if ("lastUpdateId" in message.data && Array.isArray(message.data.bids) && Array.isArray(message.data.asks)) {
+        const depth: DepthSnapshot = message.data;
         const orderBookDepth = buildOrderBookDepth(depth);
         const orderImbalance = calculateOrderImbalance(depth);
         const support = selectWall(depth.bids, "买方墙");
