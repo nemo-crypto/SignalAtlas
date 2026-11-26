@@ -861,27 +861,13 @@ export function buildEventPredictionSignals(args: {
   );
 }
 
+function findSettlementCandle(candles: EventCandle[], targetTime: number, now = Infinity): EventCandle | null {
+  return candles.find(item => item.openTime <= targetTime && item.closeTime >= targetTime && item.closeTime <= now) ?? null;
+}
+
 function findFutureCandle(candles: EventCandle[], fromIndex: number, horizonMinutes: number): EventCandle | null {
   const current = candles[fromIndex];
-  if (!current) {
-    return null;
-  }
-
-  const targetTime = current.closeTime + horizonMinutes * ONE_MINUTE_MS;
-  const directIndex = fromIndex + horizonMinutes;
-  const direct = candles[directIndex];
-
-  if (direct && Math.abs(direct.closeTime - targetTime) <= ONE_MINUTE_MS * 2) {
-    return direct;
-  }
-
-  for (let index = fromIndex + 1; index < candles.length; index += 1) {
-    if ((candles[index]?.closeTime ?? 0) >= targetTime) {
-      return candles[index] ?? null;
-    }
-  }
-
-  return null;
+  return current ? findSettlementCandle(candles, current.closeTime + horizonMinutes * ONE_MINUTE_MS) : null;
 }
 
 function createBucketMap(horizons: EventHorizonMinutes[]): Map<string, EventBacktestBucket> {
@@ -1099,7 +1085,7 @@ export function settleEventPredictionRecords(args: {
     const candles = normalizeEventCandles(
       args.candlesBySymbol[prediction.symbol as EventPredictionSymbol] ?? []
     );
-    const settledCandle = candles.find((item) => item.closeTime >= prediction.expiryAt);
+    const settledCandle = findSettlementCandle(candles, prediction.expiryAt, now);
 
     if (!settledCandle) {
       return [];
