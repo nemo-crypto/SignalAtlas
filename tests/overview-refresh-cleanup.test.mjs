@@ -30,3 +30,15 @@ test('an unmounted overview cannot install a refresh timer when startup finishes
     assert.equal(b.intervals.size, 0);
   } finally {if (root) act(() => root.unmount());}
 });
+
+test('a mounted overview starts refresh scheduling and clears every timer on unmount', async t => {
+  const b = browser(t);
+  let root;
+  try {
+    await act(async () => {root = create(React.createElement(Probe));});
+    await b.finish();
+    assert.ok(b.intervals.size > 0);
+    act(() => root.unmount());
+    assert.equal(b.intervals.size, 0);
+  } finally {if (root) act(() => root.unmount());}
+});
