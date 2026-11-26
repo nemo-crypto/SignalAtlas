@@ -250,29 +250,19 @@ export function formatEventTime(timestamp: number | null | undefined): string {
 }
 
 export function normalizeEventCandles(candles: Array<EventCandle | StoredEventCandle>): EventCandle[] {
-  const seen = new Set<string>();
-
-  return candles
-    .filter((item): item is EventCandle => {
-      return (
-        EVENT_SYMBOLS.includes(item.symbol as EventPredictionSymbol) &&
-        Number.isFinite(item.openTime) &&
-        Number.isFinite(item.closeTime) &&
-        item.open > 0 &&
-        item.high > 0 &&
-        item.low > 0 &&
-        item.close > 0
-      );
-    })
-    .sort((left, right) => left.openTime - right.openTime)
-    .filter((item) => {
-      const key = `${item.symbol}-${item.openTime}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
+  const latest = new Map<string, EventCandle>();
+  for (const item of candles) {
+    if (
+      !EVENT_SYMBOLS.includes(item.symbol as EventPredictionSymbol) ||
+      ![item.openTime, item.closeTime, item.open, item.high, item.low, item.close, item.volume].every(Number.isFinite) ||
+      item.openTime < 0 || item.closeTime < item.openTime || item.volume < 0 ||
+      item.low <= 0 || item.low > Math.min(item.open, item.close) ||
+      item.high < Math.max(item.open, item.close)
+    ) continue;
+    // 调用方按旧缓存、新数据顺序合并，同一根 K 线保留最后一个有效快照。
+    latest.set(`${item.symbol}-${item.openTime}`, item as EventCandle);
+  }
+  return [...latest.values()].sort((left, right) => left.openTime - right.openTime);
 }
 
 export function mapBinanceKlineToEventCandle(
