@@ -16,3 +16,12 @@ test('a failed batch write rolls back earlier successful requests', async t => {
   await assert.rejects(saveEventCandles([candle, {...candle, id: undefined}]));
   assert.deepEqual(await loadEventCandles({symbol: 'BTCUSDT'}), []);
 });
+
+test('a failed batch preserves existing data and later transactions can succeed', async t => {
+  database(t);
+  await saveEventCandles([candle]);
+  await assert.rejects(saveEventCandles([{...candle, close: 9}, {...candle, id: undefined}]));
+  assert.equal((await loadEventCandles({symbol: 'BTCUSDT'}))[0].close, 2);
+  await saveEventCandles([{...candle, id: 'second', openTime: 60000}]);
+  assert.equal((await loadEventCandles({symbol: 'BTCUSDT'})).length, 2);
+});
