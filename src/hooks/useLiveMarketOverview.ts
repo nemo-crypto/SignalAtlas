@@ -78,17 +78,22 @@ export function useLiveMarketOverview(symbol: string): MarketLiveState {
           return;
         }
 
-        lastPersistedUpdatedAtRef.current = snapshot?.updatedAt ?? null;
-        setState((current) => ({
-          ...current,
-          overview: snapshot?.overview ?? current.overview,
-          statusNote: snapshot
-            ? "已加载本地最近一次有效快照，正在连接 Binance 实时行情..."
-            : current.statusNote,
-          lastUpdatedAt: snapshot?.updatedAt ?? current.lastUpdatedAt,
-          lastRecomputedAt: snapshot?.recomputedAt ?? current.lastRecomputedAt,
-          signalHistory: history.length > 0 ? history : current.signalHistory
-        }));
+        if (lastPersistedUpdatedAtRef.current === null) {
+          lastPersistedUpdatedAtRef.current = snapshot?.updatedAt ?? null;
+        }
+        setState((current) => {
+          const useSnapshot = snapshot && (current.lastUpdatedAt === null || (snapshot.updatedAt ?? 0) > current.lastUpdatedAt);
+          return {
+            ...current,
+            overview: useSnapshot ? snapshot.overview : current.overview,
+            statusNote: useSnapshot
+              ? "已加载本地最近一次有效快照，正在连接 Binance 实时行情..."
+              : current.statusNote,
+            lastUpdatedAt: useSnapshot ? snapshot.updatedAt : current.lastUpdatedAt,
+            lastRecomputedAt: useSnapshot ? snapshot.recomputedAt : current.lastRecomputedAt,
+            signalHistory: current.signalHistory.length === 0 ? history : current.signalHistory
+          };
+        });
       } catch {
         if (ignore) {
           return;
