@@ -49,3 +49,15 @@ test('historical lookup does not substitute unrelated candles or zero prices', a
   assert.equal(await fetchHistoricalClosePrice('BTCUSDT', 1500, new AbortController().signal), null);
   assert.equal(await fetchHistoricalClosePrice('BTCUSDT', 9000, new AbortController().signal), null);
 });
+
+test('pending outcomes resolve after historical data recovers', async t => {
+  const f = await fixture(t);
+  try {
+    await f.tick();
+    f.price(95);
+    await f.tick();
+    assert.equal((await storage.loadPendingSignalHistoryEntries('BTCUSDT')).length, 0);
+    const history = await storage.loadSignalHistory('BTCUSDT');
+    assert.equal(history[0].marketPnlValue, (95 - 90) / 90 * 100);
+  } finally {f.close();}
+});
