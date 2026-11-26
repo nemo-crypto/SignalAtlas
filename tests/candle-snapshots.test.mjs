@@ -12,3 +12,13 @@ test('invalid OHLC values cannot enter technical analysis', () => {
   const invalid = [{...candle, high: Infinity}, {...candle, low: 105}, {...candle, volume: -1}, {...candle, closeTime: 0}];
   for (const item of invalid) assert.deepEqual(normalizeEventCandles([item]), []);
 });
+
+test('invalid replacements preserve valid data and symbol keys stay independent', () => {
+  const eth = {...candle, id: 'ETHUSDT-60000', symbol: 'ETHUSDT', close: 105};
+  const earlier = {...candle, id: 'BTCUSDT-0', openTime: 0, closeTime: 59999, volume: 0};
+  const result = normalizeEventCandles([candle, eth, {...candle, close: NaN}, earlier]);
+  assert.equal(result.length, 3);
+  assert.equal(result[0].openTime, 0);
+  assert.equal(result.find(item => item.id === candle.id).close, 101);
+  assert.equal(result.find(item => item.id === eth.id).close, 105);
+});
