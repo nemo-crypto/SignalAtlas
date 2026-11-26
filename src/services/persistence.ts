@@ -262,17 +262,21 @@ function runTransaction<T>(
         const transaction = database.transaction(storeName, mode);
         const store = transaction.objectStore(storeName);
 
-        Promise.resolve(runner(store, transaction))
-          .then((result) => {
-            transaction.oncomplete = () => {
-              database.close();
-              resolve(result);
-            };
-          })
-          .catch((error) => {
-            database.close();
-            reject(error);
-          });
+        // 先安装终态处理，再运行回调；同步异常也必须中止整个批次。
+        const result = Promise.resolve().then(() => runner(store, transaction));
+        transaction.oncomplete = () => {
+          database.close();
+          result.then(resolve, reject);
+        };
+        result.catch((error) => {
+          try {
+            transaction.abort();
+          } catch {
+            // 事务可能已经由于底层请求失败而中止。
+          }
+          database.close();
+          reject(error);
+        });
 
         transaction.onerror = () => {
           database.close();
