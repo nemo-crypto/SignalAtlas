@@ -181,6 +181,9 @@ export function useHeaderMarketTicker(): HeaderTickerItem[] {
     let reconnectTimer = 0;
     let socket: WebSocket | null = null;
     let hasSnapshot = false;
+    let snapshotRequest = 0;
+    let streamVersion = 0;
+    const streamedAt = new Map<string, number>();
     const activeControllers = new Set<AbortController>();
     const tickerMap = new Map<string, SpotTicker24hListItem>();
     const flashCounters = new Map<string, number>();
@@ -190,6 +193,8 @@ export function useHeaderMarketTicker(): HeaderTickerItem[] {
     };
 
     const loadSnapshot = async () => {
+      const requestId = ++snapshotRequest;
+      const startedAtVersion = streamVersion;
       const controller = new AbortController();
       activeControllers.add(controller);
 
@@ -203,18 +208,22 @@ export function useHeaderMarketTicker(): HeaderTickerItem[] {
         }
 
         const payload = (await response.json()) as SpotTicker24hListItem[];
-        if (ignore) {
+        if (ignore || requestId !== snapshotRequest) {
           return;
         }
 
+        const newerStreamEntries = Array.from(tickerMap.entries()).filter(
+          ([symbol]) => (streamedAt.get(symbol) ?? 0) > startedAtVersion
+        );
         tickerMap.clear();
         payload.forEach((item) => {
           tickerMap.set(item.symbol, item);
         });
+        newerStreamEntries.forEach(([symbol, item]) => tickerMap.set(symbol, item));
         hasSnapshot = true;
         commitItems();
       } catch {
-        if (ignore || hasSnapshot) {
+        if (ignore || requestId !== snapshotRequest || hasSnapshot || tickerMap.size > 0) {
           return;
         }
 
@@ -236,6 +245,7 @@ export function useHeaderMarketTicker(): HeaderTickerItem[] {
 
     const applyMiniTickerUpdates = (payload: MiniTickerStreamItem[]) => {
       payload.forEach((item) => {
+        streamedAt.set(item.s, ++streamVersion);
         const previous = tickerMap.get(item.s);
         const nextChangePercent = formatPriceChangePercent(item.c, item.o);
         const didChange =
