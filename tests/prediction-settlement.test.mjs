@@ -14,3 +14,14 @@ test('a later candle cannot stand in for missing expiry-time data', () => {
   const later = {...candle, openTime: 180000, closeTime: 239999};
   assert.deepEqual(settleEventPredictionRecords({predictions: [prediction], candlesBySymbol: {BTCUSDT: [later]}, now: 300000}), []);
 });
+
+test('exact close-time boundaries and flat outcomes remain deterministic', () => {
+  const result = settleEventPredictionRecords({
+    predictions: [{...prediction, expiryAt: candle.closeTime}],
+    candlesBySymbol: {BTCUSDT: [{...candle, close: prediction.basePrice}]},
+    now: candle.closeTime,
+  });
+  assert.equal(result[0].status, 'flat');
+  assert.equal(result[0].pnl, 0);
+  assert.equal(result[0].correct, false);
+});
