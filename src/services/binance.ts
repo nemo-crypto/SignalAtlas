@@ -225,12 +225,20 @@ export function connectBinanceMarketStream(
     }
 
     handlers.onStatus?.("正在连接 Binance WebSocket，准备接收价格、订单簿与成交流增量更新...");
-    socket = new WebSocket(
+    const activeSocket = new WebSocket(
       `${SPOT_WS_BASE}${symbol.toLowerCase()}@miniTicker/${symbol.toLowerCase()}@depth10/${symbol.toLowerCase()}@aggTrade`
     );
 
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data) as CombinedStreamMessage;
+    socket = activeSocket;
+    activeSocket.onmessage = (event) => {
+      if (closed || socket !== activeSocket) return;
+      let message: CombinedStreamMessage;
+      try {
+        message = JSON.parse(event.data) as CombinedStreamMessage;
+      } catch {
+        return;
+      }
+      if (!message || !message.data || typeof message.data !== "object") return;
       const now = Date.now();
 
       if (message.data.e === "24hrMiniTicker") {
@@ -305,16 +313,18 @@ export function connectBinanceMarketStream(
       }
     };
 
-    socket.onopen = () => {
+    activeSocket.onopen = () => {
+      if (closed || socket !== activeSocket) return;
       handlers.onStatus?.("Binance WebSocket 已连接，价格、订单簿与成交流正在刷新。");
     };
 
-    socket.onerror = () => {
+    activeSocket.onerror = () => {
+      if (closed || socket !== activeSocket) return;
       handlers.onStatus?.("Binance WebSocket 连接异常，准备自动重连。");
     };
 
-    socket.onclose = () => {
-      if (closed) {
+    activeSocket.onclose = () => {
+      if (closed || socket !== activeSocket) {
         return;
       }
 
