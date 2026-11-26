@@ -27,11 +27,13 @@ function getWorker(): Worker {
     return worker;
   }
 
-  worker = new Worker(new URL("../workers/marketAnalysisWorker.ts", import.meta.url), {
+  const activeWorker = new Worker(new URL("../workers/marketAnalysisWorker.ts", import.meta.url), {
     type: "module"
   });
 
-  worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+  worker = activeWorker;
+  activeWorker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+    if (worker !== activeWorker) return;
     const response = event.data;
     const pending = pendingRequests.get(response.requestId);
 
@@ -49,26 +51,34 @@ function getWorker(): Worker {
     pending.reject(new Error(response.error));
   };
 
-  worker.onerror = (event) => {
-    pendingRequests.forEach((pending) => {
-      pending.reject(event.error ?? new Error("market analysis worker crashed"));
-    });
-    pendingRequests.clear();
+  const failWorker = (error: unknown) => {
+    if (worker !== activeWorker) return;
     worker = null;
+    activeWorker.terminate();
+    pendingRequests.forEach((pending) => pending.reject(error));
+    pendingRequests.clear();
+  };
+  activeWorker.onerror = (event) => {
+    failWorker(event.error ?? new Error("market analysis worker crashed"));
+  };
+  activeWorker.onmessageerror = () => {
+    failWorker(new Error("market analysis worker response could not be decoded"));
   };
 
-  return worker;
+  return activeWorker;
 }
 
 export function analyzeMarketSnapshot(snapshot: RawMarketSnapshot): Promise<MarketOverview> {
-  const activeWorker = getWorker();
-  const nextRequestId = ++requestId;
-
   return new Promise<MarketOverview>((resolve, reject) => {
-    pendingRequests.set(nextRequestId, { resolve, reject });
-    activeWorker.postMessage({
-      requestId: nextRequestId,
-      snapshot
-    });
+    const nextRequestId = ++requestId;
+    try {
+      const activeWorker = getWorker();
+      pendingRequests.set(nextRequestId, { resolve, reject });
+      activeWorker.postMessage({ requestId: nextRequestId, snapshot });
+    } catch (error) {
+      // 构造或发送失败同样返回 rejected Promise，并释放未发出的请求记录。
+      pendingRequests.delete(nextRequestId);
+      reject(error);
+    }
   });
 }
