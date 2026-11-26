@@ -28,3 +28,17 @@ test('failed workers are terminated and stale events cannot reject replacement w
   fresh.onmessage({data: {requestId: fresh.messages[0].requestId, success: true, overview: {symbol: 'BTCUSDT'}}});
   assert.deepEqual(await next, {symbol: 'BTCUSDT'});
 });
+
+test('worker construction failures reject the API promise and later calls recover', async t => {
+  const r = await runtime(t);
+  const WorkingWorker = globalThis.Worker;
+  globalThis.Worker = class {constructor() {throw new Error('worker blocked');}};
+  let result;
+  assert.doesNotThrow(() => {result = r.analyzeMarketSnapshot({});});
+  await assert.rejects(result, /worker blocked/);
+  globalThis.Worker = WorkingWorker;
+  const next = r.analyzeMarketSnapshot({});
+  const worker = r.workers[0];
+  worker.onmessage({data: {requestId: worker.messages[0].requestId, success: true, overview: {symbol: 'ETHUSDT'}}});
+  assert.equal((await next).symbol, 'ETHUSDT');
+});
