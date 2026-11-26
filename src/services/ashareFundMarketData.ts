@@ -221,6 +221,9 @@ function fetchSinaJsonpRows(
   limit: number,
   signal?: AbortSignal
 ): Promise<SinaKlineRow[]> {
+  if (signal?.aborted) {
+    return Promise.reject(signal.reason ?? new DOMException("行情请求已取消", "AbortError"));
+  }
   if (typeof document === "undefined") {
     return Promise.reject(new Error("当前环境不支持 JSONP 行情加载"));
   }
