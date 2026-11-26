@@ -1,4 +1,4 @@
-import { type BinanceKline, toNumber } from "./marketAnalysis";
+import { type BinanceKline, toNumber, summarizeOpenInterestHistory } from "./marketAnalysis";
 import { type StoredEventCandle, type StoredEventPrediction } from "./persistence";
 
 export type EventPredictionSymbol = "BTCUSDT" | "ETHUSDT";
@@ -148,6 +148,7 @@ type BinanceLongShortRatioResponse = {
 
 type BinanceOpenInterestHistResponse = {
   sumOpenInterest: string;
+  timestamp: number;
 };
 
 type BinanceTicker24hResponse = {
@@ -392,18 +393,9 @@ export async function fetchEventMarketContext(
     premiumResult.status === "fulfilled" ? toNumber(premiumResult.value.lastFundingRate) * 100 : null;
   const longShortRatio =
     longShortResult.status === "fulfilled" ? toNumber(longShortResult.value[0]?.longShortRatio) : null;
-  const currentOpenInterest =
-    openInterestResult.status === "fulfilled" ? toNumber(openInterestResult.value[0]?.sumOpenInterest) : null;
-  const previousOpenInterest =
-    openInterestResult.status === "fulfilled" ? toNumber(openInterestResult.value[1]?.sumOpenInterest) : null;
-  const openInterestChangePercent =
-    currentOpenInterest !== null &&
-    previousOpenInterest !== null &&
-    Number.isFinite(currentOpenInterest) &&
-    Number.isFinite(previousOpenInterest) &&
-    previousOpenInterest > 0
-      ? ((currentOpenInterest - previousOpenInterest) / previousOpenInterest) * 100
-      : null;
+  const openInterestChangePercent = summarizeOpenInterestHistory(
+    openInterestResult.status === "fulfilled" ? openInterestResult.value : null
+  ).changePercent;
   const quoteVolume24h =
     tickerResult.status === "fulfilled" ? toNumber(tickerResult.value.quoteVolume) : null;
   const priceChange24h =
