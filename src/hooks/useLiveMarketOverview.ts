@@ -289,6 +289,7 @@ export function useLiveMarketOverview(symbol: string): MarketLiveState {
 
     const setup = async () => {
       await runFullRefresh("initial");
+      if (ignore) return;
       refreshTimer = window.setInterval(() => {
         void runFullRefresh("scheduled");
       }, FULL_RECOMPUTE_INTERVAL_MS);
