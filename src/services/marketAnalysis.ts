@@ -74,6 +74,11 @@ export type DepthEvent = {
   a: Array<[string, string]>;
 };
 
+export type PartialDepthEvent = DepthSnapshot & {
+  lastUpdateId: number;
+  e?: never;
+};
+
 export type AggTradeEvent = {
   e: "aggTrade";
   p: string;
@@ -84,7 +89,7 @@ export type AggTradeEvent = {
 
 export type CombinedStreamMessage = {
   stream: string;
-  data: MiniTickerEvent | DepthEvent | AggTradeEvent;
+  data: MiniTickerEvent | DepthEvent | PartialDepthEvent | AggTradeEvent;
 };
 
 export type RawMarketSnapshot = {
