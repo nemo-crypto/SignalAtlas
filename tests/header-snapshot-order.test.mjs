@@ -37,3 +37,23 @@ test('a slow REST snapshot cannot replace a newer streamed ticker', async t => {
     assert.equal(f.items[0].changeLabel, '+20.00%');
   } finally { f.close(); }
 });
+
+test('a superseded snapshot response cannot overwrite the snapshot loaded after reconnect', async t => {
+  const f = await fixture(t);
+  try {
+    await f.reconnect();
+    await f.resolve(1, rest('130'));
+    await f.resolve(0, rest('101'));
+    assert.equal(f.items[0].priceLabel, '$130');
+  } finally { f.close(); }
+});
+test('REST still fills untouched symbols while preserving streamed symbols', async t => {
+  const f = await fixture(t);
+  try {
+    await f.message(0, tick('120'));
+    const other = { ...rest('110')[0], symbol: 'ETHUSDT' };
+    await f.resolve(0, [...rest('101'), other]);
+    assert.equal(f.items.find(item => item.symbol === 'BTC').priceLabel, '$120');
+    assert.equal(f.items.find(item => item.symbol === 'ETH').priceLabel, '$110');
+  } finally { f.close(); }
+});
